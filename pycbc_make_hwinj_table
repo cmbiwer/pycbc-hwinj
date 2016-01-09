@@ -101,6 +101,12 @@ opts = parser.parse_args()
 # create a list to hold all the hardware injections
 hwinj_list = []
 
+# create lists to hold all segment and channel names
+exc_names = []
+seg_names = []
+odc_names = []
+vector_names = []
+
 # time of analysis
 analysis_time = segments.segment(opts.start_time, opts.end_time)
 
@@ -119,6 +125,10 @@ for line in lines:
     channel_name = data[0]
     ifo = channel_name.split(":")[0]
     seg = segments.segment(float(data[1]), float(data[2]))
+
+    # add to list of names if not already there
+    if channel_name not in exc_names:
+        exc_names.append(channel_name)
 
     # create a HardwareInjection and append to the list
     if seg in analysis_time:
@@ -142,6 +152,10 @@ for line in lines:
     segment_name = data[0]
     ifo = segment_name.split(":")[0]
     seg = segments.segment(float(data[1]), float(data[2]))
+
+    # add to list of names if not already there
+    if segment_name not in seg_names:
+        seg_names.append(segment_name)
 
     # check if CBC injection flag
     match_found = False
@@ -178,6 +192,10 @@ for line in lines:
     ifo = channel_name.split(":")[0]
     seg = segments.segment(float(data[3]), float(data[4]))
 
+    # add to list of names if not already there
+    if bitmask_name not in odc_names:
+        odc_names.append(bitmask_name)
+
     # check if injection exists
     match_found = False
     for hwinj in hwinj_list:
@@ -212,6 +230,10 @@ for line in lines:
     bitmask_name = data[1]
     ifo = channel_name.split(":")[0]
     seg = segments.segment(float(data[3]), float(data[4]))
+
+    # add to list of names if not already there
+    if bitmask_name not in vector_names:
+        vector_names.append(bitmask_name)
 
     # check if injection exists
     match_found = False
@@ -305,8 +327,12 @@ env = Environment(loader=FileSystemLoader(template_dir))
 env.globals.update(len=len)
 env.globals.update(zip=zip)
 template = env.get_template(template_filename)
-context = {'analysis_time' : analysis_time,
-           'hwinj_list' : hwinj_list}
+context = {"analysis_time" : analysis_time,
+           "hwinj_list" : hwinj_list,
+           "exc_names" : exc_names,
+           "seg_names" : seg_names,
+           "odc_names" : odc_names,
+           "vector_names" : vector_names}
 html_output = template.render(context)
 
 # write output

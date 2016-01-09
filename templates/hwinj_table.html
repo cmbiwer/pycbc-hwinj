@@ -4,11 +4,18 @@
     <tr>
         <td>IFO</td>
         <td>GraceDB entries</td>
-        <td>excitations</td>
-        <td>observation mode</td>
-        <td>segment database</td>
-        <td>ODC frames</td>
-        <td>state vector</td>
+        {% for exc_name in exc_names %}
+            <td>excitations from {{exc_name}}</td>
+        {% endfor %}
+        {% for seg_name in seg_names %}
+            <td>segments from {{seg_name}}</td>
+        {% endfor %}
+        {% for odc_name in odc_names %}
+            <td>ODC bits from {{odc_name}}</td>
+        {% endfor %}
+        {% for vector_name in vector_names %}
+            <td>state vector bits from {{vector_name}}</td>
+        {% endfor %}
         <td>tinj schedule</td>
     </tr>
     {% for hwinj in hwinj_list %}
@@ -19,28 +26,19 @@
                      {{gracedb_id}}: {{time}}<br>
                 {% endfor %}
             </td>
-            <td>
-                {% for channel_name,seg in hwinj.exc_dict.iteritems() %}
-                     {{channel_name}}: {{seg}}<br>
-                {% endfor %}
-            </td>
-            <td {% if hwinj.obs_mode %}bgcolor="green"{% else %}bgcolor="yellow"{% endif %}>
-            </td>
-            <td>
-                {% for segment_name,seg in hwinj.seg_dict.iteritems() %}
-                     {{segment_name}}: {{seg}}<br>
-                {% endfor %}
-            </td>
-            <td>
-                {% for bitmask_name,seg in hwinj.odc_dict.iteritems() %}
-                     {{bitmask_name}}: {{seg}}<br>
-                {% endfor %}
-            </td>
-            <td>
-                {% for bitmask_name,seg in hwinj.vector_dict.iteritems() %}
-                     {{bitmask_name}}: {{seg}}<br>
-                {% endfor %}
-            </td>
+            {% for exc_name in exc_names %}
+                <td>{{hwinj.exc_dict[exc_name]}}</td>
+            {% endfor %}
+            {% for seg_name in seg_names %}
+                <td>{{hwinj.seg_dict[seg_name]}}</td>
+            {% endfor %}
+            {% for odc_name in odc_names %}
+                <td>{{hwinj.odc_dict[odc_name]}}</td>
+            {% endfor %}
+            {% for vector_name in vector_names %}
+                <td>{{hwinj.vector_dict[vector_name]}}</td>
+            {% endfor %}
+           </td>
             <td {% if hwinj.scheduled %}bgcolor="green"{% else %}bgcolor="red"{% endif %}>{{hwinj.schedule_entry}}</td>
         </tr>
     {% endfor %}
