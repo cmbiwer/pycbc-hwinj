@@ -8,7 +8,7 @@ IFO2=L1
 START_TIME=1128672300
 END_TIME=1128672700
 
-TINJ_SCHEDULE_PATH=${PWD}/hwinj_svn/tinj/schedule
+TINJ_SCHEDULE_PATH=${PWD}/../check_exc_channels/hwinj_svn/tinj/schedule
 
 python pycbc_make_hwinj_workflow --name ${WORKFLOW_NAME} \
     --config-file ${CONFIG_FILE} \
