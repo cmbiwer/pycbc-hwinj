@@ -16,18 +16,20 @@ class HardwareInjection(object):
 
         self.odc_dict = segments.segmentlistdict()
 
+        self.vector_dict = segments.segmentlistdict()
+
         self.gracedb_id = []
         self.gracedb_time = []
 
-        self.scheduled_time = None
-        self.scheduled_type = None
-        self.scheduled_scale_factor = None
-        self.scheduled_prefix = None
+        self.schedule_time = None
+        self.schedule_type = None
+        self.schedule_scale_factor = None
+        self.schedule_prefix = None
 
     def __repr__(self):
         return " ".join(map(str, [self.ifo, self.gracedb_id, self.gracedb_time,
                         self.exc_dict, self.seg_dict,
-                        self.scheduled, self.scheduled_time]))
+                        self.schedule, self.schedule_time]))
 
     @property
     def obs_mode(self):
@@ -38,15 +40,15 @@ class HardwareInjection(object):
 
     @property
     def scheduled(self):
-        if self.scheduled_time:
+        if self.schedule_time:
             return True
         else:
             return False
 
     @property
     def schedule_entry(self):
-        return " ".join(map(str, [self.scheduled_time, self.scheduled_type,
-                                  self.scheduled_scale_factor, self.scheduled_prefix]))
+        return " ".join(map(str, [self.schedule_time, self.schedule_type,
+                                  self.schedule_scale_factor, self.schedule_prefix]))
 
     @property
     def inj_seg(self):
@@ -75,6 +77,8 @@ parser.add_argument("--segment-file", type=str, required=True,
 parser.add_argument("--excitation-file", type=str, required=True,
                     help="")
 parser.add_argument("--odc-file", type=str, required=True,
+                    help="")
+parser.add_argument("--state-vector-file", type=str, required=True,
                     help="")
 parser.add_argument("--gracedb-file", type=str, required=True,
                     help="")
@@ -190,6 +194,43 @@ for line in lines:
 # add new HardwareInjection to list
 hwinj_list = hwinj_list + tmp_list
 
+##### check_odc
+
+# read ODC segments
+fp = open(opts.state_vector_file, "r")
+lines = fp.readlines()
+fp.close()
+
+# loop over ODC segments
+tmp_list = []
+for line in lines:
+
+    # get segment from line
+    data = line.replace("\n", "").split(",")
+    channel_name = data[0]
+    bitmask_name = data[1]
+    ifo = channel_name.split(":")[0]
+    seg = segments.segment(float(data[3]), float(data[4]))
+
+    # check if injection exists
+    match_found = False
+    for hwinj in hwinj_list:
+        if hwinj.ifo == ifo:
+            for exc_seg in hwinj.exc_dict.values():
+                if seg.intersects(exc_seg):
+                    hwinj.vector_dict[bitmask_name] = seg
+                    match_found = True
+                    break
+
+    # if there was no corresponding HardwareInjection then make one 
+    if not match_found and seg in analysis_time:
+        hwinj = HardwareInjection(ifo)
+        hwinj.vector_dict[bitmask_name] = seg
+        tmp_list.append(hwinj)
+
+# add new HardwareInjection to list
+hwinj_list = hwinj_list + tmp_list
+
 ##### check_schedule
 
 # read schedule file
@@ -202,23 +243,23 @@ schedule = [line.split() for line in lines]
 tmp_list = []
 for entry in schedule:
 
-    # check if scheduled
+    # check if schedule
     match_found = False
     for hwinj in hwinj_list:
         if float(entry[0]) in hwinj.inj_seg.protract(120):
-            hwinj.scheduled_time = int(entry[0])
-            hwinj.scheduled_type = int(entry[1])
-            hwinj.scheduled_scale_factor = float(entry[2])
-            hwinj.scheduled_prefix = entry[3]
+            hwinj.schedule_time = int(entry[0])
+            hwinj.schedule_type = int(entry[1])
+            hwinj.schedule_scale_factor = float(entry[2])
+            hwinj.schedule_prefix = entry[3]
             match_found = True
 
     # if there was no corresponding HardwareInjection then make one 
     if not match_found and float(entry[0]) in analysis_time:
         hwinj = HardwareInjection("H1")
-        hwinj.scheduled_time = int(entry[0])
-        hwinj.scheduled_type = int(entry[1])
-        hwinj.scheduled_scale_factor = float(entry[2])
-        hwinj.scheduled_prefix = entry[3]
+        hwinj.schedule_time = int(entry[0])
+        hwinj.schedule_type = int(entry[1])
+        hwinj.schedule_scale_factor = float(entry[2])
+        hwinj.schedule_prefix = entry[3]
         tmp_list.append(hwinj)
 
 # add new HardwareInjection to list
@@ -271,6 +312,3 @@ html_output = template.render(context)
 # write output
 with open(opts.output_file, "w") as fp:
     fp.write(html_output)
-
-for hwinj in hwinj_list:
-    print hwinj.odc_dict

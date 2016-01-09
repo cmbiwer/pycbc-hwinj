@@ -22,6 +22,10 @@ parser.add_argument("--bitmask", type=int, required=True,
                     help="Bitmask to use.")
 parser.add_argument("--bitmask-name", type=str, required=True,
                     help="A string that describes the bitmask.")
+parser.add_argument("--start-time", type=int, required=True,
+                    help="GPS time to start reading data.")
+parser.add_argument("--end-time", type=int, required=True,
+                    help="GPS time to stop reading data.")
 parser.add_argument("--output-file", type=str, required=True,
                     help="Output file with segments.")
 
@@ -29,7 +33,9 @@ parser.add_argument("--output-file", type=str, required=True,
 opts = parser.parse_args()
 
 # read ODC channel
-data = read_frame(opts.frame_file, opts.channel_name)
+data = read_frame(opts.frame_file, opts.channel_name, opts.start_time, opts.end_time)
+
+print data.start_time, data.duration
 
 # use bitmask
 bits = ( data.numpy() & opts.bitmask ) == opts.bitmask

@@ -9,8 +9,6 @@
         <td>ODC frames</td>
         <td>state vector</td>
         <td>tinj schedule</td>
-        <td>laison log</td>
-        <td>tinj log</td>
     </tr>
     {% for hwinj in hwinj_list %}
         <tr>
@@ -35,10 +33,12 @@
                      {{bitmask_name}}: {{seg}}<br>
                 {% endfor %}
             </td>
-            <td></td>
+            <td>
+                {% for bitmask_name,seg in hwinj.vector_dict.iteritems() %}
+                     {{bitmask_name}}: {{seg}}<br>
+                {% endfor %}
+            </td>
             <td {% if hwinj.scheduled %}bgcolor="green"{% else %}bgcolor="red"{% endif %}>{{hwinj.schedule_entry}}</td>
-            <td></td>
-            <td></td>
         </tr>
     {% endfor %}
 </table>
