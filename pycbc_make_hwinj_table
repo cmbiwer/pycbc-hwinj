@@ -52,14 +52,17 @@ class HardwareInjection(object):
 
     @property
     def inj_seg(self):
-        inj_seg = None
-        if self.seg_dict:
-            inj_seg = self.seg_dict.values()[0]
-        if inj_seg and self.exc_dict:
-            inj_seg = inj_seg + self.exc_dict.values()[0]
-        elif self.exc_dict:
-            inj_seg = self.exc_dict.values()[0]
-        return inj_seg
+        tmp_list = segments.segmentlist([])
+        for seg in self.exc_dict.values():
+            tmp_list.append(seg)
+        for seg in self.seg_dict.values():
+            tmp_list.append(seg)
+        for seg in self.odc_dict.values():
+            tmp_list.append(seg)
+        for seg in self.vector_dict.values():
+            tmp_list.append(seg)
+        tmp_list.coalesce()
+        return tmp_list
 
 # command line usage
 parser = argparse.ArgumentParser(usage="pycbc_make_cal_workflow [--options]",
@@ -141,12 +144,10 @@ for line in lines:
     # check if CBC injection flag
     match_found = False
     for hwinj in hwinj_list:
-        if hwinj.ifo == ifo:
-            for exc_seg in hwinj.exc_dict.values():
-                if seg.intersects(exc_seg):
-                    hwinj.seg_dict[segment_name] = seg
-                    match_found = True
-                    break
+        if hwinj.ifo == ifo and hwinj.inj_seg.intersects_segment(seg):
+            hwinj.seg_dict[segment_name] = seg
+            match_found = True
+            break
 
     # if there was no corresponding HardwareInjection then make one 
     if not match_found and seg in analysis_time:
@@ -178,12 +179,10 @@ for line in lines:
     # check if injection exists
     match_found = False
     for hwinj in hwinj_list:
-        if hwinj.ifo == ifo:
-            for exc_seg in hwinj.exc_dict.values():
-                if seg.intersects(exc_seg):
-                    hwinj.odc_dict[bitmask_name] = seg
-                    match_found = True
-                    break
+        if hwinj.ifo == ifo and hwinj.inj_seg.intersects_segment(seg):
+            hwinj.odc_dict[bitmask_name] = seg
+            match_found = True
+            break
 
     # if there was no corresponding HardwareInjection then make one 
     if not match_found and seg in analysis_time:
@@ -194,14 +193,14 @@ for line in lines:
 # add new HardwareInjection to list
 hwinj_list = hwinj_list + tmp_list
 
-##### check_odc
+##### check_vector
 
-# read ODC segments
+# read state vector segments
 fp = open(opts.state_vector_file, "r")
 lines = fp.readlines()
 fp.close()
 
-# loop over ODC segments
+# loop over vector segments
 tmp_list = []
 for line in lines:
 
@@ -215,12 +214,10 @@ for line in lines:
     # check if injection exists
     match_found = False
     for hwinj in hwinj_list:
-        if hwinj.ifo == ifo:
-            for exc_seg in hwinj.exc_dict.values():
-                if seg.intersects(exc_seg):
-                    hwinj.vector_dict[bitmask_name] = seg
-                    match_found = True
-                    break
+        if hwinj.ifo == ifo and hwinj.inj_seg.intersects_segment(seg):
+            hwinj.vector_dict[bitmask_name] = seg
+            match_found = True
+            break
 
     # if there was no corresponding HardwareInjection then make one 
     if not match_found and seg in analysis_time:
@@ -286,7 +283,6 @@ for trig in gracedb_trigs:
                 hwinj.gracedb_id.append(trig[0])
                 hwinj.gracedb_time.append(float(trig[1]))
                 match_found = True
-                break
 
     # if there was no corresponding HardwareInjection then make one 
     if not match_found and trig[0].startswith("H") and trig[-1] == "H1" and float(trig[1]) in analysis_time:
