@@ -125,15 +125,16 @@ for line in lines:
     channel_name = data[0]
     ifo = channel_name.split(":")[0]
     seg = segments.segment(float(data[1]), float(data[2]))
+    channel_flag = channel_name[3:]
 
     # add to list of names if not already there
-    if channel_name not in exc_names:
-        exc_names.append(channel_name)
+    if channel_flag not in exc_names:
+        exc_names.append(channel_flag)
 
     # create a HardwareInjection and append to the list
     if seg in analysis_time:
         hwinj = HardwareInjection(ifo)
-        hwinj.exc_dict[channel_name] = seg
+        hwinj.exc_dict[channel_flag] = seg
         hwinj_list.append(hwinj)
 
 ##### check_segdb
@@ -152,23 +153,24 @@ for line in lines:
     segment_name = data[0]
     ifo = segment_name.split(":")[0]
     seg = segments.segment(float(data[1]), float(data[2]))
+    segment_flag = segment_name[3:]
 
     # add to list of names if not already there
-    if segment_name not in seg_names:
-        seg_names.append(segment_name)
+    if segment_flag not in seg_names:
+        seg_names.append(segment_flag)
 
     # check if CBC injection flag
     match_found = False
     for hwinj in hwinj_list:
         if hwinj.ifo == ifo and hwinj.inj_seg.intersects_segment(seg):
-            hwinj.seg_dict[segment_name] = seg
+            hwinj.seg_dict[segment_flag] = seg
             match_found = True
             break
 
     # if there was no corresponding HardwareInjection then make one 
     if not match_found and seg in analysis_time:
         hwinj = HardwareInjection(ifo)
-        hwinj.seg_dict[segment_name] = seg
+        hwinj.seg_dict[segment_flag] = seg
         tmp_list.append(hwinj)
 
 # add new HardwareInjection to list
