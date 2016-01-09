@@ -1,9 +1,9 @@
 #! /usr/bin/env python
 
 import argparse
+import os
 from glue import segments
 from jinja2 import Environment, FileSystemLoader
-from pycbc.workflow.segment import fromsegmentxml
 
 class HardwareInjection(object):
     def __init__(self, ifo):
@@ -76,6 +76,8 @@ parser.add_argument("--end-time", type=int, required=True,
                     help="")
 parser.add_argument("--observation-mode-segment-flag", type=str, default="DMT-ANALYSIS_READY:1",
                     help="")
+parser.add_argument("--html-template", type=str, default="templates/hwinj_table.html",
+                    help="")
 parser.add_argument("--output-file", type=str, required=True,
                     help="")
 parser.add_argument("--segment-file", type=str, required=True,
@@ -101,9 +103,6 @@ hwinj_list = []
 
 # time of analysis
 analysis_time = segments.segment(opts.start_time, opts.end_time)
-
-# path to directory with templates
-template_dir = "templates"
 
 ##### check_exc
 
@@ -300,10 +299,12 @@ hwinj_list = hwinj_list + tmp_list
 ##### output
 
 # render template
+template_dir = os.path.dirname(opts.html_template)
+template_filename = os.path.basename(opts.html_template)
 env = Environment(loader=FileSystemLoader(template_dir))
 env.globals.update(len=len)
 env.globals.update(zip=zip)
-template = env.get_template('hwinj_table.html')
+template = env.get_template(template_filename)
 context = {'analysis_time' : analysis_time,
            'hwinj_list' : hwinj_list}
 html_output = template.render(context)
