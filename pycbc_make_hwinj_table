@@ -33,7 +33,8 @@ class HardwareInjection(object):
 
     @property
     def obs_mode(self):
-        if self.science_seg:
+        suffix = "DMT-ANALYSIS_READY:1"
+        if self.seg_dict[self.ifo + ":" + suffix]:
             return True
         else:
             return False
@@ -308,3 +309,4 @@ html_output = template.render(context)
 # write output
 with open(opts.output_file, "w") as fp:
     fp.write(html_output)
+

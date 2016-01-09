@@ -5,6 +5,7 @@
         <td>IFO</td>
         <td>GraceDB entries</td>
         <td>excitations</td>
+        <td>observation mode</td>
         <td>segment database</td>
         <td>ODC frames</td>
         <td>state vector</td>
@@ -22,6 +23,8 @@
                 {% for channel_name,seg in hwinj.exc_dict.iteritems() %}
                      {{channel_name}}: {{seg}}<br>
                 {% endfor %}
+            </td>
+            <td {% if hwinj.obs_mode %}bgcolor="green"{% else %}bgcolor="yellow"{% endif %}>
             </td>
             <td>
                 {% for segment_name,seg in hwinj.seg_dict.iteritems() %}
