@@ -1,0 +1,252 @@
+#! /usr/bin/env pythonn
+
+import argparse
+import logging
+import numpy
+import os
+import urlparse
+import shutil
+import ligo.gracedb.rest as gracedb_rest
+import Pegasus.DAX3 as dax
+from glue import segments
+from pycbc import workflow
+from pycbc.workflow.core import make_external_call, OutSegFile
+
+def frame_paths(frame_types, start_time, end_time, server=None):
+    from pycbc.frame import datafind_connection
+    site = frame_type[0]
+    connection = datafind_connection(server)
+    times = connection.find_times(site, frame_type, 
+                                  gpsstart=start_time, 
+                                  gpsend=end_time)
+    cache = connection.find_frame_urls(site, frame_type, start_time, end_time, urltype="file")
+    paths = [entry.path for entry in cache]
+    return paths    
+
+##### setup
+
+# read command line
+parser = argparse.ArgumentParser(usage="pycbc_make_cal_workflow [--options]",
+                                 description="Workflow generator for adjusting calibration model.")
+parser.add_argument("--name", type=str, required=True,
+                    help="Descriptive name of the analysis.")
+workflow.add_workflow_command_line_group(parser)
+args = parser.parse_args()
+
+# setup log
+logging.basicConfig(format="%(asctime)s:%(levelname)s : %(message)s",
+                    level=logging.INFO,datefmt="%I:%M:%S")
+
+# directory names
+run_dir = os.path.join(os.getcwd(), args.name)
+datafind_dir = os.path.join(run_dir, "datafind")
+check_segdb_dir = os.path.join(run_dir, "check_segdb")
+check_exc_dir = os.path.join(run_dir, "check_exc")
+check_odc_dir = os.path.join(run_dir, "check_odc")
+check_gracedb_dir = os.path.join(run_dir, "check_gracedb")
+check_schedule_dir = os.path.join(run_dir, "check_schedule")
+
+# change into run directory and make directories that are needed
+if not os.path.exists(run_dir):
+    os.makedirs(run_dir)
+os.chdir(run_dir)
+if not os.path.exists(check_segdb_dir):
+    os.makedirs(check_segdb_dir)
+    os.makedirs(check_segdb_dir + "/logs")
+if not os.path.exists(check_gracedb_dir):
+    os.makedirs(check_gracedb_dir)
+if not os.path.exists(check_schedule_dir):
+    os.makedirs(check_schedule_dir)
+os.chdir(run_dir)
+
+# setup workflow
+wf = workflow.Workflow(args, args.name)
+
+# make a dict to hold frame files for each IFO
+frame_files = {}
+for ifo in wf.ifos:
+    frame_files[ifo] = workflow.FileList([])
+
+##### check_exc
+
+# create a FileList to hold output files for check_exc executable
+check_exc_files = workflow.FileList([])
+
+# loop over subsections of config file for check_exc executable
+exe_name = "check_exc"
+for subsection in wf.cp.get_subsections(exe_name):
+
+    # get options from config file
+    frame_type = wf.cp.get_opt_tags(exe_name, "frame-type", [subsection])
+    channel_name = wf.cp.get_opt_tags(exe_name, "channel-name", [subsection])
+    ifo = channel_name.split(":")[0]
+    tag = channel_name.split(":")[1].replace("-", "_")
+
+    # print statement
+    logging.info("Creating %s workflow nodes for %s", exe_name, channel_name)
+
+    # setup executable to check for excitations in channel
+    check_exc_files = workflow.FileList([])
+    check_exc_exe = workflow.Executable(wf.cp, exe_name, ifos=ifo, universe="local",
+                                        out_dir=check_exc_dir, tags=[tag])
+
+    # loop over frame files of this frame type
+    paths = frame_paths(frame_type, wf.analysis_time[0], wf.analysis_time[1])
+    for frame_path in paths:
+
+        # get frame segment from filename
+        frame_start_time = int(os.path.basename(frame_path).rstrip(".gwf").split("-")[-2])
+        frame_duration = int(os.path.basename(frame_path).rstrip(".gwf").split("-")[-1])
+        frame_seg = segments.segment(frame_start_time, frame_start_time + frame_duration)
+
+        # append frame file to list of frame files for this IFO
+        frame_file = workflow.File("H1", "DATAFIND", frame_seg, file_url="file://localhost" + frame_path)
+        frame_file.PFN(frame_path, site="local")
+        frame_files[ifo].append(frame_file)
+
+        # make a node in the workflow to check for excitations
+        check_exc_node = check_exc_exe.create_node()
+        check_exc_node.add_input_opt("--frame-file", frame_file)
+        check_exc_node.add_opt("--channel-name", channel_name)
+        check_exc_file = workflow.File(ifo, exe_name.upper(), frame_file.segment,
+                                     directory=check_exc_dir, extension="txt",
+                                     tags=[])
+        check_exc_node.new_output_file_opt(frame_file.segment, "txt", "--output-file")
+        wf.add_node(check_exc_node)
+        check_exc_files.append(check_exc_file)
+
+##### check_odc
+
+# create list for holding output files
+check_odc_files = workflow.FileList([])
+
+# loop over subsections of config file for check_exc executable
+exe_name = "check_odc"
+for subsection in wf.cp.get_subsections(exe_name):
+
+    # get options from config file
+    frame_type = wf.cp.get_opt_tags(exe_name, "frame-type", [subsection])
+    channel_name = wf.cp.get_opt_tags(exe_name, "channel-name", [subsection])
+    bit_name = wf.cp.get_opt_tags(exe_name, "bit-name", [subsection])
+    bitmask = wf.cp.get_opt_tags(exe_name, "bitmask", [subsection])
+    ifo = channel_name.split(":")[0]
+
+    # print statement
+    logging.info("Creating %s workflow nodes for %s %s", exe_name, channel_name, bit_name)
+
+    # setup executable to check for ODC bit transitions in channel
+    check_odc_exe = workflow.Executable(wf.cp, exe_name, ifos=ifo, universe="local",
+                                        out_dir=check_odc_dir, tags=[bit_name])
+
+    #! FIXME: assuming all frame types are the same here
+    # loop over frame files
+    for frame_file in frame_files[ifo]:
+
+        # make a node in the workflow to check for excitations
+        check_odc_node = check_odc_exe.create_node()
+        check_odc_node.add_input_opt("--frame-file", frame_file)
+        check_odc_node.add_opt("--channel-name", channel_name)
+        check_odc_node.add_opt("--bitmask", bitmask)
+        check_odc_file = workflow.File(ifo, exe_name.upper(), frame_file.segment,
+                                     directory=check_odc_dir, extension="txt",
+                                     tags=[])
+        check_odc_node.new_output_file_opt(frame_file.segment, "txt", "--output-file")
+        wf.add_node(check_odc_node)
+        check_odc_files.append(check_odc_file)
+
+##### check_segdb
+
+# make a dict to hold segment files for each IFO
+segment_files = {}
+for ifo in wf.ifos:
+    segment_files[ifo] = workflow.FileList([])
+
+# create list for holding output files
+check_odc_files = workflow.FileList([])
+
+# loop over subsections of config file for check_exc executable
+exe_name = "check_segdb"
+for subsection in wf.cp.get_subsections(exe_name):
+
+    # get options from config file
+    database_url = wf.cp.get_opt_tags(exe_name, "database-url", [subsection])
+    segment_name = wf.cp.get_opt_tags(exe_name, "segment-name", [subsection])
+    ifo, segment_flag, version = segment_name.split(":")
+
+    # print statement
+    logging.info("Querying %s workflow nodes for %s", exe_name, segment_name)
+
+    # construct output path
+    output_path = os.path.join(check_segdb_dir,
+        ifo + "-" + segment_flag.replace("-", "_") + "_" + version + "-" + str(wf.analysis_time[0]) + "-" + str(abs(wf.analysis_time)) + ".xml.gz")
+
+    # construct command line for segdb external call
+    cmd = [wf.cp.get("executables", exe_name),
+            "--query-segments",
+            "--segment-url", database_url,
+            "--gps-start-time", str(wf.analysis_time[0]),
+            "--gps-end-time", str(wf.analysis_time[1]),
+            "--include-segments", segment_name,
+            "--output-file", output_path]
+  
+    # make an external call to query segment database
+    make_external_call(cmd, out_dir=os.path.join(check_segdb_dir,"logs"),
+                            out_basename=ifo.lower() + "-" + segment_flag.lower() + "-" + version)
+
+    # Yes its poor to generate a file and then read it back in
+    # new segment database API should fix this
+    seg_url  = urlparse.urlunparse(["file", "localhost", output_path,
+                                   None, None, None])
+    seg_file = OutSegFile(ifo, "CHECK_SEGDB",
+                          wf.analysis_time, seg_url, segment_list=[],
+                                  tags=[segment_flag])
+    seg_file.PFN(output_path, site="local")
+    segment_files[ifo].append(seg_file)
+
+##### check_gracedb
+
+# print statement
+logging.info("Querying gracedb rest API for all triggers")
+
+# get gracedb events
+client = gracedb_rest.GraceDb()
+query = str(wf.analysis_time[0]) + " .. " + str(wf.analysis_time[1])
+evnts = client.events(query, orderby="gpstime", columns="graceid,gpstime,pipeline,instruments")
+
+# write gracedb events to file
+ifos = "".join(wf.ifos)
+path = os.path.join(check_gracedb_dir, ifos + "-" + "GRACEDB" + "-" + str(wf.analysis_time[0]) + "-" + str(abs(wf.analysis_time)) + ".txt")
+with open(path, "w") as fp:
+    for evnt in evnts:
+        line = ",".join(map(str, [evnt["graceid"],
+                        evnt["gpstime"], evnt["pipeline"],
+                        "".join(evnt["instruments"].split(",")),
+        ])) + "\n"
+        fp.write(line)
+gracedb_file = workflow.File(ifos, "GRACEDB", wf.analysis_time, file_url="file://localhost" + path)
+
+##### check_schedule
+
+# get tinj schedule
+schedule_path = wf.cp.get("workflow-schedule", "schedule-path")
+
+# check if schedule exists
+if os.path.exists(schedule_path):
+
+    # print statement
+    logging.info("Retrieving schedule from %s", schedule_path)
+
+    # copy schedule to run directory
+    path = os.path.join(check_schedule_dir, ifos + "-" + "SCHEDULE" + "-" + str(wf.analysis_time[0]) + "-" + str(abs(wf.analysis_time)) + ".txt")
+    schedule_file = workflow.File(ifos, "SCHEDULE", wf.analysis_time, file_url="file://localhost" + path)
+    shutil.copy(schedule_path, path)
+
+##### finish
+
+# write dax
+wf.save()
+
+# done
+logging.info("Done")
+
+

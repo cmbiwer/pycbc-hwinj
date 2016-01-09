@@ -1,0 +1,234 @@
+#! /usr/bin/env python
+
+import argparse
+from glue import segments
+from jinja2 import Environment, FileSystemLoader
+from pycbc.workflow.segment import fromsegmentxml
+
+class HardwareInjection(object):
+    def __init__(self, ifo):
+
+        self.ifo = ifo
+
+        self.exc_dict = segments.segmentlistdict()
+
+        self.seg_dict = segments.segmentlistdict()
+
+        self.odc_dict = segments.segmentlistdict()
+
+        self.gracedb_id = []
+        self.gracedb_time = []
+
+        self.scheduled_time = None
+        self.scheduled_type = None
+        self.scheduled_scale_factor = None
+        self.scheduled_prefix = None
+
+    def __repr__(self):
+        return " ".join(map(str, [self.ifo, self.gracedb_id, self.gracedb_time,
+                        self.exc_dict, self.seg_dict,
+                        self.scheduled, self.scheduled_time]))
+
+    @property
+    def obs_mode(self):
+        if self.science_seg:
+            return True
+        else:
+            return False
+
+    @property
+    def scheduled(self):
+        if self.scheduled_time:
+            return True
+        else:
+            return False
+
+    @property
+    def schedule_entry(self):
+        return " ".join(map(str, [self.scheduled_time, self.scheduled_type,
+                                  self.scheduled_scale_factor, self.scheduled_prefix]))
+
+    @property
+    def inj_seg(self):
+        inj_seg = None
+        if self.seg_dict:
+            inj_seg = self.seg_dict.values()[0]
+        if inj_seg and self.exc_dict:
+            inj_seg = inj_seg + self.exc_dict.values()[0]
+        elif self.exc_dict:
+            inj_seg = self.exc_dict.values()[0]
+        return inj_seg
+
+# command line usage
+parser = argparse.ArgumentParser(usage="pycbc_make_cal_workflow [--options]",
+                                 description="Workflow generator for adjusting calibration model.")
+
+# command line options
+parser.add_argument("--start-time", type=int, required=True,
+                    help="")
+parser.add_argument("--end-time", type=int, required=True,
+                    help="")
+parser.add_argument("--output-file", type=str, required=True,
+                    help="")
+parser.add_argument("--segment-file", type=str, required=True,
+                    help="")
+parser.add_argument("--excitation-file", type=str, required=True,
+                    help="")
+parser.add_argument("--gracedb-file", type=str, required=True,
+                    help="")
+parser.add_argument("--schedule-file", type=str, required=True,
+                    help="")
+
+# parse command line
+opts = parser.parse_args()
+
+##### setup
+
+# create a list to hold all the hardware injections
+hwinj_list = []
+
+# time of analysis
+analysis_time = segments.segment(opts.start_time, opts.end_time)
+
+# path to directory with templates
+template_dir = "/home/cbiwer/projects/hwinj_review/check_exc_channels/templates"
+
+##### check_exc
+
+# read excitation channel segments
+fp = open(opts.excitation_file, "r")
+lines = fp.readlines()
+fp.close()
+
+# loop over excitations found
+for line in lines:
+
+    # get segment from line
+    data = line.replace("\n", "").split(",")
+    channel_name = data[0]
+    ifo = channel_name.split(":")[0]
+    seg = segments.segment(float(data[1]), float(data[2]))
+
+    # create a HardwareInjection and append to the list
+    if seg in analysis_time:
+        hwinj = HardwareInjection(ifo)
+        hwinj.exc_dict[channel_name] = seg
+        hwinj_list.append(hwinj)
+
+##### check_segdb
+
+# read segdb segments
+fp = open(opts.segment_file, "r")
+lines = fp.readlines()
+fp.close()
+
+# loop over CBC injection segments
+tmp_list = []
+for line in lines:
+
+    # get segment from line
+    data = line.replace("\n", "").split(",")
+    segment_name = data[0]
+    ifo = segment_name.split(":")[0]
+    seg = segments.segment(float(data[1]), float(data[2]))
+
+    # check if CBC injection flag
+    match_found = False
+    for hwinj in hwinj_list:
+        if hwinj.ifo == ifo:
+            for exc_seg in hwinj.exc_dict.values():
+                if seg.intersects(exc_seg):
+                    hwinj.seg_dict[segment_name] = seg
+                    match_found = True
+                    break
+
+    # if there was no corresponding HardwareInjection then make one 
+    if not match_found and seg in analysis_time:
+        hwinj = HardwareInjection(ifo)
+        hwinj.seg_dict[segment_name] = seg
+        tmp_list.append(hwinj)
+
+# add new HardwareInjection to list
+hwinj_list = hwinj_list + tmp_list
+
+##### check_schedule
+
+# read schedule file
+fp = open(opts.schedule_file, "r")
+lines = fp.readlines()
+fp.close()
+schedule = [line.split() for line in lines]
+
+# loop over entries in schedule
+tmp_list = []
+for entry in schedule:
+
+    # check if scheduled
+    match_found = False
+    for hwinj in hwinj_list:
+        if float(entry[0]) in hwinj.inj_seg.protract(120):
+            hwinj.scheduled_time = int(entry[0])
+            hwinj.scheduled_type = int(entry[1])
+            hwinj.scheduled_scale_factor = float(entry[2])
+            hwinj.scheduled_prefix = entry[3]
+            match_found = True
+
+    # if there was no corresponding HardwareInjection then make one 
+    if not match_found and float(entry[0]) in analysis_time:
+        hwinj = HardwareInjection("H1")
+        hwinj.scheduled_time = int(entry[0])
+        hwinj.scheduled_type = int(entry[1])
+        hwinj.scheduled_scale_factor = float(entry[2])
+        hwinj.scheduled_prefix = entry[3]
+        tmp_list.append(hwinj)
+
+# add new HardwareInjection to list
+hwinj_list = hwinj_list + tmp_list
+
+##### check_gracedb
+
+# read gracedb triggers
+gracedb_trigs = []
+fp = open(opts.gracedb_file, "r")
+lines = fp.readlines()
+gracedb_trigs = [line.replace("\n", "").split(",") for line in lines]
+
+# loop over gracedb triggers
+tmp_list = []
+for trig in gracedb_trigs:
+
+    # check if gracedb trigger
+    match_found = None
+    for hwinj in hwinj_list:
+        if hwinj.inj_seg:
+            if trig[3] == hwinj.ifo and trig[2] == "HardwareInjection" \
+               and float(trig[1]) in hwinj.inj_seg.protract(120):
+                hwinj.gracedb_id.append(trig[0])
+                hwinj.gracedb_time.append(float(trig[1]))
+                match_found = True
+                break
+
+    # if there was no corresponding HardwareInjection then make one 
+    if not match_found and trig[0].startswith("H") and trig[-1] == "H1" and float(trig[1]) in analysis_time:
+        hwinj = HardwareInjection("H1")
+        hwinj.gracedb_id.append(trig[0])
+        hwinj.gracedb_time.append(float(trig[1]))
+        tmp_list.append(hwinj)
+
+# add new HardwareInjection to list
+hwinj_list = hwinj_list + tmp_list
+
+##### output
+
+# render template
+env = Environment(loader=FileSystemLoader(template_dir))
+env.globals.update(len=len)
+env.globals.update(zip=zip)
+template = env.get_template('hwinj_table.html')
+context = {'analysis_time' : analysis_time,
+           'hwinj_list' : hwinj_list}
+html_output = template.render(context)
+
+# write output
+with open(opts.output_file, "w") as fp:
+    fp.write(html_output)

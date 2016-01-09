@@ -1,0 +1,50 @@
+#! /usr/bin/env python
+
+import argparse
+import numpy as np
+from glue import segments
+from glue.segmentsUtils import from_bitstream
+from itertools import groupby
+from math import ceil, floor
+from operator import itemgetter
+from pycbc.frame import read_frame
+
+# command line usage
+parser = argparse.ArgumentParser(usage='pycbc_check_frame_excitations [--options]',
+                                 description="Check for non-zero values in a frame channel.")
+
+# command line options
+parser.add_argument("--frame-file", type=str, required=True,
+                    help="Frame file to read.")
+parser.add_argument("--channel-name", type=str, required=True,
+                    help="Channel name to read.")
+parser.add_argument("--bitmask", type=int, required=True,
+                    help="Bitmask to use.")
+parser.add_argument("--output-file", type=str, required=True,
+                    help="Output file with segments.")
+
+# parse command line
+opts = parser.parse_args()
+
+# read ODC channel
+data = read_frame(opts.frame_file, opts.channel_name)
+
+# use bitmask
+bits = ( data.numpy() & opts.bitmask ) == opts.bitmask
+bits = 1 - bits
+
+# get segments where bit is active
+segs = from_bitstream(bits, data.start_time, data.delta_t)
+segs = segments.segmentlist([segments.segment(s[0], s[1]) for s in segs])
+
+# pad segments by a fraction of a second
+pad_seconds = 0.1
+segs = segments.segmentlist([seg.protract(0.1) for seg in segs])
+
+# find the union of segments
+segs.coalesce()
+
+# write segments to file
+with open(opts.output_file, "w") as fp:
+    for seg in segs:
+        fp.write(str(seg[0]) + "," + str(seg[1]) + "\n")

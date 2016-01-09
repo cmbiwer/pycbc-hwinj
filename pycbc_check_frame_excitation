@@ -1,0 +1,49 @@
+#! /usr/bin/env python
+
+import argparse
+import numpy as np
+from glue import segments
+from itertools import groupby
+from operator import itemgetter
+from pycbc.frame import read_frame
+
+# command line usage
+parser = argparse.ArgumentParser(usage='pycbc_check_frame_excitations [--options]',
+                                 description="Check for non-zero values in a frame channel.")
+
+# command line options
+parser.add_argument("--frame-file", type=str, required=True,
+                    help="Frame file to read.")
+parser.add_argument("--channel-name", type=str, required=True,
+                    help="Channel name to read.")
+parser.add_argument("--output-file", type=str, required=True,
+                    help="Output file with segments.")
+
+# parse command line
+opts = parser.parse_args()
+
+# read channel
+data = read_frame(opts.frame_file, opts.channel_name)
+
+# find non-zero entries
+exc_idx = np.nonzero(data)[0]
+
+# make a segment list
+segs = segments.segmentlist([])
+
+# group by lists of adjacent numbers
+for k, g in groupby(enumerate(exc_idx), lambda (i,x):i-x):
+    idx = map(itemgetter(1), g)
+
+    # append segment list with segment
+    start_time = data.delta_t * idx[0] + data.start_time
+    end_time = data.delta_t * idx[-1] + data.start_time
+    seg = segments.segment(start_time, end_time)
+    segs.append(seg)
+
+# write segments to file
+with open(opts.output_file, "w") as fp:
+    for seg in segs:
+        line = ",".join(map(str, [opts.channel_name, seg[0], seg[1]])) + "\n"
+        fp.write(line)
+
