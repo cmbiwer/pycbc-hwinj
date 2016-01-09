@@ -33,10 +33,10 @@ class HardwareInjection(object):
 
     @property
     def obs_mode(self):
-        suffix = "DMT-ANALYSIS_READY:1"
-        if self.seg_dict[self.ifo + ":" + suffix]:
-            return True
-        else:
+        try:
+            if self.seg_dict[self.ifo + ":" + opts.observation_mode_segment_flag]:
+                return True
+        except KeyError:
             return False
 
     @property
@@ -73,6 +73,8 @@ parser = argparse.ArgumentParser(usage="pycbc_make_cal_workflow [--options]",
 parser.add_argument("--start-time", type=int, required=True,
                     help="")
 parser.add_argument("--end-time", type=int, required=True,
+                    help="")
+parser.add_argument("--observation-mode-segment-flag", type=str, default="DMT-ANALYSIS_READY:1",
                     help="")
 parser.add_argument("--output-file", type=str, required=True,
                     help="")
