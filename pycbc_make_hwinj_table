@@ -74,6 +74,8 @@ parser.add_argument("--segment-file", type=str, required=True,
                     help="")
 parser.add_argument("--excitation-file", type=str, required=True,
                     help="")
+parser.add_argument("--odc-file", type=str, required=True,
+                    help="")
 parser.add_argument("--gracedb-file", type=str, required=True,
                     help="")
 parser.add_argument("--schedule-file", type=str, required=True,
@@ -91,7 +93,7 @@ hwinj_list = []
 analysis_time = segments.segment(opts.start_time, opts.end_time)
 
 # path to directory with templates
-template_dir = "/home/cbiwer/projects/hwinj_review/check_exc_channels/templates"
+template_dir = "templates"
 
 ##### check_exc
 
@@ -146,6 +148,43 @@ for line in lines:
     if not match_found and seg in analysis_time:
         hwinj = HardwareInjection(ifo)
         hwinj.seg_dict[segment_name] = seg
+        tmp_list.append(hwinj)
+
+# add new HardwareInjection to list
+hwinj_list = hwinj_list + tmp_list
+
+##### check_odc
+
+# read ODC segments
+fp = open(opts.odc_file, "r")
+lines = fp.readlines()
+fp.close()
+
+# loop over ODC segments
+tmp_list = []
+for line in lines:
+
+    # get segment from line
+    data = line.replace("\n", "").split(",")
+    channel_name = data[0]
+    bitmask_name = data[1]
+    ifo = channel_name.split(":")[0]
+    seg = segments.segment(float(data[3]), float(data[4]))
+
+    # check if injection exists
+    match_found = False
+    for hwinj in hwinj_list:
+        if hwinj.ifo == ifo:
+            for exc_seg in hwinj.exc_dict.values():
+                if seg.intersects(exc_seg):
+                    hwinj.odc_dict[bitmask_name] = seg
+                    match_found = True
+                    break
+
+    # if there was no corresponding HardwareInjection then make one 
+    if not match_found and seg in analysis_time:
+        hwinj = HardwareInjection(ifo)
+        hwinj.odc_dict[bitmask_name] = seg
         tmp_list.append(hwinj)
 
 # add new HardwareInjection to list
@@ -232,3 +271,6 @@ html_output = template.render(context)
 # write output
 with open(opts.output_file, "w") as fp:
     fp.write(html_output)
+
+for hwinj in hwinj_list:
+    print hwinj.odc_dict

@@ -30,7 +30,11 @@
                      {{segment_name}}: {{seg}}<br>
                 {% endfor %}
             </td>
-            <td></td>
+            <td>
+                {% for bitmask_name,seg in hwinj.odc_dict.iteritems() %}
+                     {{bitmask_name}}: {{seg}}<br>
+                {% endfor %}
+            </td>
             <td></td>
             <td {% if hwinj.scheduled %}bgcolor="green"{% else %}bgcolor="red"{% endif %}>{{hwinj.schedule_entry}}</td>
             <td></td>

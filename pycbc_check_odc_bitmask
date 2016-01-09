@@ -20,6 +20,8 @@ parser.add_argument("--channel-name", type=str, required=True,
                     help="Channel name to read.")
 parser.add_argument("--bitmask", type=int, required=True,
                     help="Bitmask to use.")
+parser.add_argument("--bitmask-name", type=str, required=True,
+                    help="A string that describes the bitmask.")
 parser.add_argument("--output-file", type=str, required=True,
                     help="Output file with segments.")
 
@@ -47,5 +49,5 @@ segs.coalesce()
 # write segments to file
 with open(opts.output_file, "w") as fp:
     for seg in segs:
-        line = ",".join(map(str, [opts.channel_name, seg[0], seg[1]])) + "\n"
+        line = ",".join(map(str, [opts.channel_name, opts.bitmask_name, opts.bitmask, seg[0], seg[1]])) + "\n"
         fp.write(line)
