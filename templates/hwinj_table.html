@@ -37,7 +37,8 @@
         <thead>
             <tr>
                 <th data-sortable="true">IFO</th>
-                <th data-sortable="true">GraceDB entries</th>
+                <th data-sortable="true">GraceDB IDs</th>
+                <th data-sortable="true">GraceDB times</th>
                 {% for exc_name in exc_names %}
                 <th data-sortable="true">excitations from {{exc_name}}</th>
                 {% endfor %}
@@ -59,9 +60,10 @@
             <tr>
                 <td>{{hwinj.ifo}}</td>
                 <td>
-                {% for gracedb_id,time in zip(hwinj.gracedb_id,hwinj.gracedb_time) %}
-                    {{gracedb_id}} ({{time}})
-                {% endfor %}
+                {% for gracedb_id in hwinj.gracedb_id %}{{gracedb_id}} {% endfor %}
+                </td>
+                <td>
+                {% for time in hwinj.gracedb_time %}{{time}} {% endfor %}
                 </td>
                 {% for exc_name in exc_names %}
                 <td>{{hwinj.exc_dict[exc_name]}}</td>
