@@ -89,6 +89,9 @@ frame_files = {}
 for ifo in wf.ifos:
     frame_files[ifo] = workflow.FileList([])
 
+# analysis time of each node
+stride = 2000
+
 ##### check_exc
 
 # create a FileList to hold output files for check_exc executable
@@ -115,19 +118,22 @@ for subsection in wf.cp.get_subsections(exe_name):
     # see if frame files already in workflow and if not then add them
     tmp_files = get_frame_files(wf, frame_files, ifo, frame_type)
 
-    # loop over frame files
-    for frame_file in tmp_files:
+    # loop over analysis time for each node
+    for start_time in range(wf.analysis_time[0], wf.analysis_time[1], stride):
+
+        # get frame files for this node
+        node_seg = segments.segment(start_time, start_time+stride)
+        node_frame_files = [tmp_file for tmp_file in tmp_files if tmp_file.segment.intersects(node_seg)]
 
         # make a node in the workflow to check for excitations
         check_exc_node = check_exc_exe.create_node()
-        check_exc_node.add_input_opt("--frame-file", frame_file)
+        check_exc_node.add_input_list_opt("--frame-files", node_frame_files)
         check_exc_node.add_opt("--channel-name", channel_name)
-        check_exc_file = workflow.File(ifo, exe_name.upper(), frame_file.segment,
-                                     directory=check_exc_dir, extension="txt",
-                                     tags=[])
-        check_exc_node.new_output_file_opt(frame_file.segment, "txt", "--output-file")
-        wf.add_node(check_exc_node)
+        check_exc_node.add_opt("--start-time", node_seg[0])
+        check_exc_node.add_opt("--end-time", node_seg[1])
+        check_exc_file = check_exc_node.new_output_file_opt(node_seg, "txt", "--output-file")
         check_exc_files.append(check_exc_file)
+        wf.add_node(check_exc_node)
 
 ##### check_bitmask
 
@@ -155,27 +161,24 @@ for subsection in wf.cp.get_subsections(exe_name):
     # see if frame files already in workflow and if not then add them
     tmp_files = get_frame_files(wf, frame_files, ifo, frame_type)
 
-    # loop over frame files
-    for frame_file in tmp_files:
+    # loop over analysis time for each node
+    for start_time in range(wf.analysis_time[0], wf.analysis_time[1], stride):
 
-        # start and end time of the node
-        start_time = frame_file.segment[0]
-        end_time = frame_file.segment[1]
+        # get frame files for this node
+        node_seg = segments.segment(start_time, start_time+stride)
+        node_frame_files = [tmp_file for tmp_file in tmp_files if tmp_file.segment.intersects(node_seg)]
 
         # make a node in the workflow to check for excitations
         check_bitmask_node = check_bitmask_exe.create_node()
-        check_bitmask_node.add_input_opt("--frame-file", frame_file)
+        check_bitmask_node.add_input_list_opt("--frame-files", node_frame_files)
         check_bitmask_node.add_opt("--channel-name", channel_name)
         check_bitmask_node.add_opt("--bitmask-name", bitmask_name)
         check_bitmask_node.add_opt("--bitmask", bitmask)
-        check_bitmask_node.add_opt("--start-time", start_time)
-        check_bitmask_node.add_opt("--end-time", end_time)
-        check_bitmask_file = workflow.File(ifo, exe_name.upper(), frame_file.segment,
-                                     directory=check_bitmask_dir, extension="txt",
-                                     tags=[])
-        check_bitmask_node.new_output_file_opt(frame_file.segment, "txt", "--output-file")
-        wf.add_node(check_bitmask_node)
+        check_bitmask_node.add_opt("--start-time", node_seg[0])
+        check_bitmask_node.add_opt("--end-time", node_seg[1])
+        check_bitmask_file = check_bitmask_node.new_output_file_opt(node_seg, "txt", "--output-file")
         check_bitmask_files.append(check_bitmask_file)
+        wf.add_node(check_bitmask_node)
 
 ##### check_segdb
 
