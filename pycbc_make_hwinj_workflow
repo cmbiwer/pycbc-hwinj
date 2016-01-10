@@ -122,7 +122,10 @@ for subsection in wf.cp.get_subsections(exe_name):
     for start_time in range(wf.analysis_time[0], wf.analysis_time[1], stride):
 
         # get frame files for this node
-        node_seg = segments.segment(start_time, start_time+stride)
+        end_time = start_time + stride
+        if wf.analysis_time[1] < end_time:
+            end_time = wf.analysis_time[1]
+        node_seg = segments.segment(start_time, end_time)
         node_frame_files = [tmp_file for tmp_file in tmp_files if tmp_file.segment.intersects(node_seg)]
 
         # make a node in the workflow to check for excitations
@@ -165,7 +168,10 @@ for subsection in wf.cp.get_subsections(exe_name):
     for start_time in range(wf.analysis_time[0], wf.analysis_time[1], stride):
 
         # get frame files for this node
-        node_seg = segments.segment(start_time, start_time+stride)
+        end_time = start_time + stride
+        if wf.analysis_time[1] < end_time:
+            end_time = wf.analysis_time[1]
+        node_seg = segments.segment(start_time, end_time)
         node_frame_files = [tmp_file for tmp_file in tmp_files if tmp_file.segment.intersects(node_seg)]
 
         # make a node in the workflow to check for excitations

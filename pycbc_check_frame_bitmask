@@ -14,8 +14,8 @@ parser = argparse.ArgumentParser(usage='pycbc_check_frame_excitations [--options
                                  description="Check for non-zero values in a frame channel.")
 
 # command line options
-parser.add_argument("--frame-file", type=str, required=True,
-                    help="Frame file to read.")
+parser.add_argument("--frame-files", type=str, nargs="+", required=True,
+                    help="Frame files to read.")
 parser.add_argument("--channel-name", type=str, required=True,
                     help="Channel name to read.")
 parser.add_argument("--bitmask", type=int, required=True,
@@ -33,9 +33,7 @@ parser.add_argument("--output-file", type=str, required=True,
 opts = parser.parse_args()
 
 # read ODC channel
-data = read_frame(opts.frame_file, opts.channel_name, opts.start_time, opts.end_time)
-
-print data.start_time, data.duration
+data = read_frame(opts.frame_files, opts.channel_name, opts.start_time, opts.end_time)
 
 # use bitmask
 bits = ( data.numpy() & opts.bitmask ) == opts.bitmask
