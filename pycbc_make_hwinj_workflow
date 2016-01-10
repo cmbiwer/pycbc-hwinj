@@ -13,6 +13,7 @@ from pycbc import workflow
 from pycbc.workflow.core import make_external_call, OutSegFile
 
 def frame_paths(frame_types, start_time, end_time, server=None):
+    #! FIXME: make this a pull request to use urltype in frame module
     from pycbc.frame import datafind_connection
     site = frame_type[0]
     connection = datafind_connection(server)
@@ -22,6 +23,27 @@ def frame_paths(frame_types, start_time, end_time, server=None):
     cache = connection.find_frame_urls(site, frame_type, start_time, end_time, urltype="file")
     paths = [entry.path for entry in cache]
     return paths    
+
+def get_frame_files(wf, frame_files, ifo, frame_type):
+
+    # see if frame files already in workflow and if not then add them
+    tmp_files = frame_files[ifo].find_output_with_tag(frame_type)
+    if not tmp_files:
+        paths = frame_paths(frame_type, wf.analysis_time[0], wf.analysis_time[1])
+        for frame_path in paths:
+
+            # get frame segment from filename
+            frame_start_time = int(os.path.basename(frame_path).rstrip(".gwf").split("-")[-2])
+            frame_duration = int(os.path.basename(frame_path).rstrip(".gwf").split("-")[-1])
+            frame_seg = segments.segment(frame_start_time, frame_start_time + frame_duration)
+
+            # append frame file to list of frame files for this IFO
+            frame_file = workflow.File("H1", "DATAFIND", frame_seg, file_url="file://localhost" + frame_path, tags=[frame_type])
+            frame_file.PFN(frame_path, site="local")
+            frame_files[ifo].append(frame_file)
+            tmp_files.append(frame_file)
+
+    return tmp_files
 
 ##### setup
 
@@ -42,10 +64,9 @@ run_dir = os.path.join(os.getcwd(), args.name)
 datafind_dir = os.path.join(run_dir, "datafind")
 check_segdb_dir = os.path.join(run_dir, "check_segdb")
 check_exc_dir = os.path.join(run_dir, "check_exc")
-check_odc_dir = os.path.join(run_dir, "check_odc")
+check_bitmask_dir = os.path.join(run_dir, "check_bitmask")
 check_gracedb_dir = os.path.join(run_dir, "check_gracedb")
 check_schedule_dir = os.path.join(run_dir, "check_schedule")
-check_vector_dir = os.path.join(run_dir, "check_vector")
 
 # change into run directory and make directories that are needed
 if not os.path.exists(run_dir):
@@ -91,19 +112,11 @@ for subsection in wf.cp.get_subsections(exe_name):
     check_exc_exe = workflow.Executable(wf.cp, exe_name, ifos=ifo, universe="local",
                                         out_dir=check_exc_dir, tags=[tag])
 
-    # loop over frame files of this frame type
-    paths = frame_paths(frame_type, wf.analysis_time[0], wf.analysis_time[1])
-    for frame_path in paths:
+    # see if frame files already in workflow and if not then add them
+    tmp_files = get_frame_files(wf, frame_files, ifo, frame_type)
 
-        # get frame segment from filename
-        frame_start_time = int(os.path.basename(frame_path).rstrip(".gwf").split("-")[-2])
-        frame_duration = int(os.path.basename(frame_path).rstrip(".gwf").split("-")[-1])
-        frame_seg = segments.segment(frame_start_time, frame_start_time + frame_duration)
-
-        # append frame file to list of frame files for this IFO
-        frame_file = workflow.File("H1", "DATAFIND", frame_seg, file_url="file://localhost" + frame_path)
-        frame_file.PFN(frame_path, site="local")
-        frame_files[ifo].append(frame_file)
+    # loop over frame files
+    for frame_file in tmp_files:
 
         # make a node in the workflow to check for excitations
         check_exc_node = check_exc_exe.create_node()
@@ -116,13 +129,13 @@ for subsection in wf.cp.get_subsections(exe_name):
         wf.add_node(check_exc_node)
         check_exc_files.append(check_exc_file)
 
-##### check_odc
+##### check_bitmask
 
 # create list for holding output files
-check_odc_files = workflow.FileList([])
+check_bitmask_files = workflow.FileList([])
 
 # loop over subsections of config file for check_exc executable
-exe_name = "check_odc"
+exe_name = "check_bitmask"
 for subsection in wf.cp.get_subsections(exe_name):
 
     # get options from config file
@@ -136,88 +149,33 @@ for subsection in wf.cp.get_subsections(exe_name):
     logging.info("Creating %s workflow nodes for %s %s", exe_name, channel_name, bitmask_name)
 
     # setup executable to check for ODC bit transitions in channel
-    check_odc_exe = workflow.Executable(wf.cp, exe_name, ifos=ifo, universe="local",
-                                        out_dir=check_odc_dir, tags=[bitmask_name])
+    check_bitmask_exe = workflow.Executable(wf.cp, exe_name, ifos=ifo, universe="local",
+                                        out_dir=check_bitmask_dir, tags=[bitmask_name])
 
-    #! FIXME: assuming all frame types are the same here
+    # see if frame files already in workflow and if not then add them
+    tmp_files = get_frame_files(wf, frame_files, ifo, frame_type)
+
     # loop over frame files
-    for frame_file in frame_files[ifo]:
+    for frame_file in tmp_files:
 
         # start and end time of the node
         start_time = frame_file.segment[0]
         end_time = frame_file.segment[1]
 
         # make a node in the workflow to check for excitations
-        check_odc_node = check_odc_exe.create_node()
-        check_odc_node.add_input_opt("--frame-file", frame_file)
-        check_odc_node.add_opt("--channel-name", channel_name)
-        check_odc_node.add_opt("--bitmask-name", bitmask_name)
-        check_odc_node.add_opt("--bitmask", bitmask)
-        check_odc_node.add_opt("--start-time", start_time)
-        check_odc_node.add_opt("--end-time", end_time)
-        check_odc_file = workflow.File(ifo, exe_name.upper(), frame_file.segment,
-                                     directory=check_odc_dir, extension="txt",
+        check_bitmask_node = check_bitmask_exe.create_node()
+        check_bitmask_node.add_input_opt("--frame-file", frame_file)
+        check_bitmask_node.add_opt("--channel-name", channel_name)
+        check_bitmask_node.add_opt("--bitmask-name", bitmask_name)
+        check_bitmask_node.add_opt("--bitmask", bitmask)
+        check_bitmask_node.add_opt("--start-time", start_time)
+        check_bitmask_node.add_opt("--end-time", end_time)
+        check_bitmask_file = workflow.File(ifo, exe_name.upper(), frame_file.segment,
+                                     directory=check_bitmask_dir, extension="txt",
                                      tags=[])
-        check_odc_node.new_output_file_opt(frame_file.segment, "txt", "--output-file")
-        wf.add_node(check_odc_node)
-        check_odc_files.append(check_odc_file)
-
-##### check_vector
-
-# create list for holding output files
-check_vector_files = workflow.FileList([])
-
-# loop over subsections of config file for check_exc executable
-exe_name = "check_vector"
-for subsection in wf.cp.get_subsections(exe_name):
-
-    # get options from config file
-    frame_type = wf.cp.get_opt_tags(exe_name, "frame-type", [subsection])
-    channel_name = wf.cp.get_opt_tags(exe_name, "channel-name", [subsection])
-    bitmask_name = wf.cp.get_opt_tags(exe_name, "bitmask-name", [subsection])
-    bitmask = wf.cp.get_opt_tags(exe_name, "bitmask", [subsection])
-    ifo = channel_name.split(":")[0]
-
-    # print statement
-    logging.info("Creating %s workflow nodes for %s %s", exe_name, channel_name, bitmask_name)
-
-    # setup executable to check for ODC bit transitions in channel
-    check_vector_exe = workflow.Executable(wf.cp, exe_name, ifos=ifo, universe="local",
-                                        out_dir=check_vector_dir, tags=[bitmask_name])
-
-    #! FIXME: assuming frame type is different here
-    # loop over frame files of this frame type
-    paths = frame_paths(frame_type, wf.analysis_time[0], wf.analysis_time[1])
-    for frame_path in paths:
-
-        # get frame segment from filename
-        frame_start_time = int(os.path.basename(frame_path).rstrip(".gwf").split("-")[-2])
-        frame_duration = int(os.path.basename(frame_path).rstrip(".gwf").split("-")[-1])
-        frame_seg = segments.segment(frame_start_time, frame_start_time + frame_duration)
-
-        # append frame file to list of frame files for this IFO
-        frame_file = workflow.File("H1", "DATAFIND", frame_seg, file_url="file://localhost" + frame_path)
-        frame_file.PFN(frame_path, site="local")
-        frame_files[ifo].append(frame_file)
-
-        # start and end time of the node
-        start_time = frame_file.segment[0]
-        end_time = frame_file.segment[1]
-
-        # make a node in the workflow to check for excitations
-        check_vector_node = check_vector_exe.create_node()
-        check_vector_node.add_input_opt("--frame-file", frame_file)
-        check_vector_node.add_opt("--channel-name", channel_name)
-        check_vector_node.add_opt("--bitmask-name", bitmask_name)
-        check_vector_node.add_opt("--bitmask", bitmask)
-        check_vector_node.add_opt("--start-time", start_time)
-        check_vector_node.add_opt("--end-time", end_time)
-        check_vector_file = workflow.File(ifo, exe_name.upper(), frame_file.segment,
-                                     directory=check_vector_dir, extension="txt",
-                                     tags=[])
-        check_vector_node.new_output_file_opt(frame_file.segment, "txt", "--output-file")
-        wf.add_node(check_vector_node)
-        check_vector_files.append(check_vector_file)
+        check_bitmask_node.new_output_file_opt(frame_file.segment, "txt", "--output-file")
+        wf.add_node(check_bitmask_node)
+        check_bitmask_files.append(check_bitmask_file)
 
 ##### check_segdb
 

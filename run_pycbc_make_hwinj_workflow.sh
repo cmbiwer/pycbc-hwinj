@@ -20,4 +20,4 @@ python pycbc_make_hwinj_workflow --name ${WORKFLOW_NAME} \
 
 # plan and submit the workflow
 cd ${WORKFLOW_NAME}
-pycbc_submit_dax --accounting-group ligo.dev.o1.detchar.explore.test --dax ${WORKFLOW_NAME}.dax
+#pycbc_submit_dax --accounting-group ligo.dev.o1.detchar.explore.test --dax ${WORKFLOW_NAME}.dax
