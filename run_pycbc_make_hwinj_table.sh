@@ -3,7 +3,8 @@
 START_TIME=1128672300
 END_TIME=1128672700
 
-OUTPUT_FILE=/home/cbiwer/public_html/tmp.html
+OUTPUT_DIR=/home/cbiwer/public_html
+OUTPUT_FILE=${OUTPUT_DIR}/tmp.html
 
 SEGMENT_FILE=test/check_segdb/H1L1-ALL.txt
 EXCITATION_FILE=test/check_exc/H1L1-All.txt
@@ -20,3 +21,5 @@ python pycbc_make_hwinj_table --start-time ${START_TIME} --end-time ${END_TIME} 
     --gracedb-file ${GRACEDB_FILE} \
     --schedule-file ${SCHEDULE_FILE} \
     --output-file ${OUTPUT_FILE}
+
+cp -r static ${OUTPUT_DIR}

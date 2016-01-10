@@ -1,45 +1,137 @@
-<h3>Hardware injections cross check from the interval {{analysis_time}}</h3>
 
-<table border=1>
-    <tr>
-        <td>IFO</td>
-        <td>GraceDB entries</td>
-        {% for exc_name in exc_names %}
-            <td>excitations from {{exc_name}}</td>
-        {% endfor %}
-        {% for seg_name in seg_names %}
-            <td>segments from {{seg_name}}</td>
-        {% endfor %}
-        {% for odc_name in odc_names %}
-            <td>ODC bits from {{odc_name}}</td>
-        {% endfor %}
-        {% for vector_name in vector_names %}
-            <td>state vector bits from {{vector_name}}</td>
-        {% endfor %}
-        <td>tinj schedule</td>
-    </tr>
-    {% for hwinj in hwinj_list %}
-        <tr>
-            <td>{{hwinj.ifo}}</td>
-            <td {% if len(hwinj.gracedb_id) == 1 %}bgcolor="green"{% endif %}{% if len(hwinj.gracedb_id) > 1 %}bgcolor="yellow"{% endif %}>
-                {% for gracedb_id,time in zip(hwinj.gracedb_id,hwinj.gracedb_time) %}
-                     {{gracedb_id}}: {{time}}<br>
-                {% endfor %}
-            </td>
-            {% for exc_name in exc_names %}
-                <td>{{hwinj.exc_dict[exc_name]}}</td>
-            {% endfor %}
-            {% for seg_name in seg_names %}
-                <td>{{hwinj.seg_dict[seg_name]}}</td>
-            {% endfor %}
-            {% for odc_name in odc_names %}
-                <td>{{hwinj.odc_dict[odc_name]}}</td>
-            {% endfor %}
-            {% for vector_name in vector_names %}
-                <td>{{hwinj.vector_dict[vector_name]}}</td>
-            {% endfor %}
-           </td>
-            <td {% if hwinj.scheduled %}bgcolor="green"{% else %}bgcolor="red"{% endif %}>{{hwinj.schedule_entry}}</td>
-        </tr>
-    {% endfor %}
-</table>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>LIGO hardware injection log</title>
+
+    <link href="./static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="./static/css/bootstrap-table.css" rel="stylesheet">
+    <link href="./static/css/table.css" rel="stylesheet">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="./static/js/bootstrap.min.js"></script>
+    <script src="./static/js/bootstrap-table.js"></script>
+    <script src="./static/js/bootstrap-table-mobile.js"></script>
+    <script src="./static/js/bootstrap-table-export.js"></script>
+    <script src="./static/js/bootstrap-table-export-plugin.js"></script>
+
+    <script>
+
+        function rgbToHex(r, g, b) {
+            return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+        }
+
+        function rankFormatter(value) {
+            var arr = value.split(',');
+            var rank = arr[0];
+            var val = arr[1];
+
+            // Covert to 0-100 scale
+            var n = (((rank - 1) * (100 - 1)) / (351 - 1)) + 1
+            var R = (255 * n) / 100;
+            var G = (255 * (100 - n)) / 100 ;
+
+            return '<span style="background-color: ' + rgbToHex(R, G, 0) +
+                   '" class="label label-default rank-label">' +
+                   rank + '</span>' + val;
+        }
+
+        function sorter(a, b) {
+            a = a.split(',')[1];
+            b = b.split(',')[1];
+            return a - b;
+        }
+
+        function luckSorter(a, b) {
+            a = a.split(',')[1];
+            b = b.split(',')[1];
+
+            var a_sign = a[0];
+            var b_sign = b[0];
+
+            a = a.substring(1);
+            b = b.substring(1);
+
+            if(a_sign == '-') {
+                a = a * -1;
+            }
+            if(b_sign == '-') {
+                b = b * -1;
+            }
+            return a - b;
+        }
+
+    </script>
+
+  </head>
+  <body>
+
+    <div class="container">
+
+<h3>Hardware injections from the segment {{analysis_time}}</h3>
+
+      <table class="table table-striped" data-toggle="table"
+                                         data-search="true"
+                                         data-show-refresh="false"
+                                         data-show-toggle="true"
+                                         data-show-columns="false"
+                                         data-show-export="true"
+                                         {% if not display_all %}
+                                           data-pagination="true"
+                                         {% endif %}
+                                         data-mobile-responsive="true">
+          <thead>
+              <tr>
+                  <th data-sortable="true">IFO</th>
+                  <th data-sortable="true">GraceDB entries</th>
+                  {% for exc_name in exc_names %}
+                  <th data-sortable="true">excitations from {{exc_name}}</th>
+                  {% endfor %}
+                  {% for seg_name in seg_names %}
+                  <th data-sortable="true">segments from {{seg_name}}</th>
+                  {% endfor %}
+                  {% for odc_name in odc_names %}
+                  <th data-sortable="true">ODC bits from {{odc_name}}</th>
+                  {% endfor %}
+                  {% for vector_name in vector_names %}
+                  <th data-sortable="true">state vector bits from {{vector_name}}</th>
+                  {% endfor %}
+                  <th data-sortable="true">tinj schedule</th>
+              </tr>
+          </thead>
+
+          <tbody>
+              {% for hwinj in hwinj_list %}
+              <tr>
+                  <td>{{hwinj.ifo}}</td>
+                  <td>
+                  {% for gracedb_id,time in zip(hwinj.gracedb_id,hwinj.gracedb_time) %}
+                      {{gracedb_id}}: {{time}}<br>
+                  {% endfor %}
+                  </td>
+                  {% for exc_name in exc_names %}
+                  <td>{{hwinj.exc_dict[exc_name]}}</td>
+                  {% endfor %}
+                  {% for seg_name in seg_names %}
+                  <td>{{hwinj.seg_dict[seg_name]}}</td>
+                  {% endfor %}
+                  {% for odc_name in odc_names %}
+                  <td>{{hwinj.odc_dict[odc_name]}}</td>
+                  {% endfor %}
+                  {% for vector_name in vector_names %}
+                  <td>{{hwinj.vector_dict[vector_name]}}</td>
+                  {% endfor %}
+                  <td {% if hwinj.scheduled %}bgcolor="green"{% else %}bgcolor="red"{% endif %}>{{hwinj.schedule_entry}}</td>
+              </tr>
+              {% endfor %}
+          </tbody>
+      </table>
+
+    </div>
+
+  </body>
+</html>
