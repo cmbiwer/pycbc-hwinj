@@ -3,8 +3,11 @@
 START_TIME=1128672300
 END_TIME=1128672700
 
-OUTPUT_DIR=/home/cbiwer/public_html
+OUTPUT_DIR=/home/cbiwer/public_html/hwinjlog_test
 OUTPUT_FILE=${OUTPUT_DIR}/tmp.html
+
+rm -rf ${OUTPUT_DIR}
+mkdir -p ${OUTPUT_DIR}
 
 SEGMENT_FILE=test/check_segdb/H1L1-ALL.txt
 EXCITATION_FILE=test/check_exc/H1L1-All.txt
