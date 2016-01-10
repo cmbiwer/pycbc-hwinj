@@ -11,16 +11,14 @@ mkdir -p ${OUTPUT_DIR}
 
 SEGMENT_FILE=test/check_segdb/H1L1-ALL.txt
 EXCITATION_FILE=test/check_exc/H1L1-All.txt
-ODC_FILE=test/check_odc/H1L1-All.txt
-STATE_VECTOR_FILE=test/check_vector/H1L1-All.txt
+BITMASK_FILE=test/check_bitmask/H1L1-All.txt
 GRACEDB_FILE=test/check_gracedb/H1L1-GRACEDB-1128672300-400.txt
 SCHEDULE_FILE=test/check_schedule/H1L1-SCHEDULE-1128672300-400.txt
 
 python pycbc_make_hwinj_table --start-time ${START_TIME} --end-time ${END_TIME} \
     --segment-file ${SEGMENT_FILE} \
     --excitation-file ${EXCITATION_FILE} \
-    --odc-file ${ODC_FILE} \
-    --state-vector-file ${STATE_VECTOR_FILE} \
+    --bitmask-file ${BITMASK_FILE} \
     --gracedb-file ${GRACEDB_FILE} \
     --schedule-file ${SCHEDULE_FILE} \
     --output-file ${OUTPUT_FILE}

@@ -45,11 +45,8 @@
                 {% for seg_name in seg_names %}
                 <th data-sortable="true">segments from {{seg_name}}</th>
                 {% endfor %}
-                {% for odc_name in odc_names %}
-                <th data-sortable="true">ODC bits from {{odc_name}}</th>
-                {% endfor %}
-                {% for vector_name in vector_names %}
-                <th data-sortable="true">state vector bits from {{vector_name}}</th>
+                {% for bitmask_name in bitmask_names %}
+                <th data-sortable="true">bitmask for {{bitmask_name}}</th>
                 {% endfor %}
                 <th data-sortable="true">tinj schedule</th>
             </tr>
@@ -71,11 +68,8 @@
                 {% for seg_name in seg_names %}
                 <td>{{hwinj.seg_dict[seg_name]}}</td>
                 {% endfor %}
-                {% for odc_name in odc_names %}
-                <td>{{hwinj.odc_dict[odc_name]}}</td>
-                {% endfor %}
-                {% for vector_name in vector_names %}
-                <td>{{hwinj.vector_dict[vector_name]}}</td>
+                {% for bitmask_name in bitmask_names %}
+                <td>{{hwinj.bitmask_dict[bitmask_name]}}</td>
                 {% endfor %}
                 <td {% if hwinj.scheduled %}bgcolor="green"{% else %}bgcolor="red"{% endif %}>{{hwinj.schedule_entry}}</td>
             </tr>

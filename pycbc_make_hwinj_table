@@ -14,9 +14,7 @@ class HardwareInjection(object):
 
         self.seg_dict = segments.segmentlistdict()
 
-        self.odc_dict = segments.segmentlistdict()
-
-        self.vector_dict = segments.segmentlistdict()
+        self.bitmask_dict = segments.segmentlistdict()
 
         self.gracedb_id = []
         self.gracedb_time = []
@@ -58,9 +56,7 @@ class HardwareInjection(object):
             tmp_list.append(seg)
         for seg in self.seg_dict.values():
             tmp_list.append(seg)
-        for seg in self.odc_dict.values():
-            tmp_list.append(seg)
-        for seg in self.vector_dict.values():
+        for seg in self.bitmask_dict.values():
             tmp_list.append(seg)
         tmp_list.coalesce()
         return tmp_list
@@ -84,9 +80,7 @@ parser.add_argument("--segment-file", type=str, required=True,
                     help="")
 parser.add_argument("--excitation-file", type=str, required=True,
                     help="")
-parser.add_argument("--odc-file", type=str, required=True,
-                    help="")
-parser.add_argument("--state-vector-file", type=str, required=True,
+parser.add_argument("--bitmask-file", type=str, required=True,
                     help="")
 parser.add_argument("--gracedb-file", type=str, required=True,
                     help="")
@@ -104,7 +98,7 @@ hwinj_list = []
 # create lists to hold all segment and channel names
 exc_names = []
 seg_names = []
-odc_names = []
+bitmask_names = []
 vector_names = []
 
 # time of analysis
@@ -176,10 +170,10 @@ for line in lines:
 # add new HardwareInjection to list
 hwinj_list = hwinj_list + tmp_list
 
-##### check_odc
+##### check_bitmask
 
 # read ODC segments
-fp = open(opts.odc_file, "r")
+fp = open(opts.bitmask_file, "r")
 lines = fp.readlines()
 fp.close()
 
@@ -195,60 +189,21 @@ for line in lines:
     seg = segments.segment(float(data[3]), float(data[4]))
 
     # add to list of names if not already there
-    if bitmask_name not in odc_names:
-        odc_names.append(bitmask_name)
+    if bitmask_name not in bitmask_names:
+        bitmask_names.append(bitmask_name)
 
     # check if injection exists
     match_found = False
     for hwinj in hwinj_list:
         if hwinj.ifo == ifo and hwinj.inj_seg.intersects_segment(seg):
-            hwinj.odc_dict[bitmask_name] = seg
+            hwinj.bitmask_dict[bitmask_name] = seg
             match_found = True
             break
 
     # if there was no corresponding HardwareInjection then make one 
     if not match_found and seg in analysis_time:
         hwinj = HardwareInjection(ifo)
-        hwinj.odc_dict[bitmask_name] = seg
-        tmp_list.append(hwinj)
-
-# add new HardwareInjection to list
-hwinj_list = hwinj_list + tmp_list
-
-##### check_vector
-
-# read state vector segments
-fp = open(opts.state_vector_file, "r")
-lines = fp.readlines()
-fp.close()
-
-# loop over vector segments
-tmp_list = []
-for line in lines:
-
-    # get segment from line
-    data = line.replace("\n", "").split(",")
-    channel_name = data[0]
-    bitmask_name = data[1]
-    ifo = channel_name.split(":")[0]
-    seg = segments.segment(float(data[3]), float(data[4]))
-
-    # add to list of names if not already there
-    if bitmask_name not in vector_names:
-        vector_names.append(bitmask_name)
-
-    # check if injection exists
-    match_found = False
-    for hwinj in hwinj_list:
-        if hwinj.ifo == ifo and hwinj.inj_seg.intersects_segment(seg):
-            hwinj.vector_dict[bitmask_name] = seg
-            match_found = True
-            break
-
-    # if there was no corresponding HardwareInjection then make one 
-    if not match_found and seg in analysis_time:
-        hwinj = HardwareInjection(ifo)
-        hwinj.vector_dict[bitmask_name] = seg
+        hwinj.bitmask_dict[bitmask_name] = seg
         tmp_list.append(hwinj)
 
 # add new HardwareInjection to list
@@ -333,8 +288,7 @@ context = {"analysis_time" : analysis_time,
            "hwinj_list" : hwinj_list,
            "exc_names" : exc_names,
            "seg_names" : seg_names,
-           "odc_names" : odc_names,
-           "vector_names" : vector_names}
+           "bitmask_names" : bitmask_names}
 html_output = template.render(context)
 
 # write output
