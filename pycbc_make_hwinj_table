@@ -100,6 +100,10 @@ parser.add_argument("--schedule-file", type=str, required=True,
 # parse command line
 opts = parser.parse_args()
 
+# sanity checks
+if not os.path.dirname(opts.html_template) == os.path.dirname(opts.csv_template):
+    raise ValueError("HTML and CSV outputs must be in the same directory.")
+
 ##### setup
 
 # create a list to hold all the hardware injections
@@ -297,6 +301,7 @@ env.globals.update(table_row_keys=table_row_keys)
 env.globals.update(table_row_values=table_row_values)
 template = env.get_template(template_filename)
 context = {"analysis_time" : analysis_time,
+           "csv_filename" : os.path.basename(opts.output_csv_file),
            "hwinj_list" : hwinj_list,
            "exc_names" : exc_names,
            "seg_names" : seg_names,
