@@ -339,8 +339,6 @@ context = {"hwinj_list" : hwinj_list,
            "bitmask_names" : bitmask_names}
 csv_output = template.render(context)
 
-print seg.__repr__()
-
 # write output
 with open(opts.output_csv_file, "w") as fp:
     fp.write(csv_output)
