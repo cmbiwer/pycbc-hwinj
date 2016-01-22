@@ -36,42 +36,18 @@
                                        data-mobile-responsive="true">
         <thead>
             <tr>
-                <th data-sortable="true">IFO</th>
-                <th data-sortable="true">GraceDB IDs</th>
-                <th data-sortable="true">GraceDB times</th>
-                {% for exc_name in exc_names %}
-                <th data-sortable="true">excitations from {{exc_name}}</th>
+                {% for key in table_row_keys(exc_names, seg_names, bitmask_names) %}
+                <th data-sortable="true">{{key}}</th>
                 {% endfor %}
-                {% for seg_name in seg_names %}
-                <th data-sortable="true">segments from {{seg_name}}</th>
-                {% endfor %}
-                {% for bitmask_name in bitmask_names %}
-                <th data-sortable="true">bitmask for {{bitmask_name}}</th>
-                {% endfor %}
-                <th data-sortable="true">tinj schedule</th>
             </tr>
         </thead>
 
         <tbody>
             {% for hwinj in hwinj_list %}
             <tr>
-                <td>{{hwinj.ifo}}</td>
-                <td>
-                {% for gracedb_id in hwinj.gracedb_id %}{{gracedb_id}} {% endfor %}
-                </td>
-                <td>
-                {% for time in hwinj.gracedb_time %}{{time}} {% endfor %}
-                </td>
-                {% for exc_name in exc_names %}
-                <td>{{hwinj.exc_dict[exc_name]}}</td>
+                {% for val in table_row_values(hwinj, exc_names, seg_names, bitmask_names) %}
+                <td>{{val}}</td>
                 {% endfor %}
-                {% for seg_name in seg_names %}
-                <td>{{hwinj.seg_dict[seg_name]}}</td>
-                {% endfor %}
-                {% for bitmask_name in bitmask_names %}
-                <td>{{hwinj.bitmask_dict[bitmask_name]}}</td>
-                {% endfor %}
-                <td {% if hwinj.scheduled %}bgcolor="green"{% else %}bgcolor="red"{% endif %}>{{hwinj.schedule_entry}}</td>
             </tr>
             {% endfor %}
         </tbody>

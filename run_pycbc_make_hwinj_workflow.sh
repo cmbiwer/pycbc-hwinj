@@ -10,7 +10,13 @@ END_TIME=1128672700
 
 TINJ_SCHEDULE_PATH=${PWD}/../check_exc_channels/hwinj_svn/tinj/schedule
 
-python pycbc_make_hwinj_workflow --name ${WORKFLOW_NAME} \
+EXE_DIR=${PWD}
+
+# change into run dir
+mkdir -p ${WORKFLOW_NAME}
+cd ${WORKFLOW_NAME}
+
+python ${EXE_DIR}/pycbc_make_hwinj_workflow --name ${WORKFLOW_NAME} \
     --config-file ${CONFIG_FILE} \
     --config-overrides workflow:start-time:${START_TIME} \
         workflow:end-time:${END_TIME} \

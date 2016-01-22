@@ -1,0 +1,3 @@
+{{ ",".join(table_row_keys(exc_names, seg_names, bitmask_names)) }}
+{% for hwinj in hwinj_list %}{{ ",".join(map( str, table_row_values(hwinj, exc_names, seg_names, bitmask_names))) }}
+{% endfor %}

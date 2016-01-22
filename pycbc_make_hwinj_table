@@ -2,6 +2,7 @@
 
 import argparse
 import os
+from collections import OrderedDict
 from glue import segments
 from jinja2 import Environment, FileSystemLoader
 
@@ -30,21 +31,6 @@ class HardwareInjection(object):
                         self.schedule, self.schedule_time]))
 
     @property
-    def obs_mode(self):
-        try:
-            if self.seg_dict[self.ifo + ":" + opts.observation_mode_segment_flag]:
-                return True
-        except KeyError:
-            return False
-
-    @property
-    def scheduled(self):
-        if self.schedule_time:
-            return True
-        else:
-            return False
-
-    @property
     def schedule_entry(self):
         return " ".join(map(str, [self.schedule_time, self.schedule_type,
                                   self.schedule_scale_factor, self.schedule_prefix]))
@@ -61,6 +47,28 @@ class HardwareInjection(object):
         tmp_list.coalesce()
         return tmp_list
 
+def table_row_keys(exc_keys, seg_keys, bitmask_keys):
+    cols = ["IFO", "GraceDB IDs", "GraceDB Entries"]
+    for key in exc_keys:
+        cols.append("Excitations from "+key)
+    for key in seg_keys:
+        cols.append("Segments from "+key)
+    for key in bitmask_keys:
+        cols.append("Bitmask segments from "+key)
+    cols.append("Schedule")
+    return cols
+
+def table_row_values(hwinj, exc_keys, seg_keys, bitmask_keys):
+    cols = [hwinj.ifo, hwinj.gracedb_id, hwinj.gracedb_time]
+    for key in exc_keys:
+        cols.append(hwinj.exc_dict[key])
+    for key in seg_keys:
+        cols.append(hwinj.seg_dict[key])
+    for key in bitmask_keys:
+        cols.append(hwinj.bitmask_dict[key])
+    cols.append(hwinj.schedule_entry)
+    return cols
+
 # command line usage
 parser = argparse.ArgumentParser(usage="pycbc_make_cal_workflow [--options]",
                                  description="Workflow generator for adjusting calibration model.")
@@ -70,11 +78,13 @@ parser.add_argument("--start-time", type=int, required=True,
                     help="")
 parser.add_argument("--end-time", type=int, required=True,
                     help="")
-parser.add_argument("--observation-mode-segment-flag", type=str, default="DMT-ANALYSIS_READY:1",
+parser.add_argument("--csv-template", type=str, default="templates/hwinj_csv.html",
                     help="")
 parser.add_argument("--html-template", type=str, default="templates/hwinj_table.html",
                     help="")
-parser.add_argument("--output-file", type=str, required=True,
+parser.add_argument("--output-csv-file", type=str, required=True,
+                    help="")
+parser.add_argument("--output-html-file", type=str, required=True,
                     help="")
 parser.add_argument("--segment-file", type=str, required=True,
                     help="")
@@ -283,6 +293,8 @@ template_filename = os.path.basename(opts.html_template)
 env = Environment(loader=FileSystemLoader(template_dir))
 env.globals.update(len=len)
 env.globals.update(zip=zip)
+env.globals.update(table_row_keys=table_row_keys)
+env.globals.update(table_row_values=table_row_values)
 template = env.get_template(template_filename)
 context = {"analysis_time" : analysis_time,
            "hwinj_list" : hwinj_list,
@@ -292,6 +304,24 @@ context = {"analysis_time" : analysis_time,
 html_output = template.render(context)
 
 # write output
-with open(opts.output_file, "w") as fp:
+with open(opts.output_html_file, "w") as fp:
     fp.write(html_output)
 
+# render template
+template_dir = os.path.dirname(opts.csv_template)
+template_filename = os.path.basename(opts.csv_template)
+env = Environment(loader=FileSystemLoader(template_dir))
+env.globals.update(map=map)
+env.globals.update(str=str)
+env.globals.update(table_row_keys=table_row_keys)
+env.globals.update(table_row_values=table_row_values)
+template = env.get_template(template_filename)
+context = {"hwinj_list" : hwinj_list,
+           "exc_names" : exc_names,
+           "seg_names" : seg_names,
+           "bitmask_names" : bitmask_names}
+csv_output = template.render(context)
+
+# write output
+with open(opts.output_csv_file, "w") as fp:
+    fp.write(csv_output)
