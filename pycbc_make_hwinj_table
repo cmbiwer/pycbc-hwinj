@@ -37,12 +37,13 @@ class HardwareInjection(object):
     @property
     def inj_seg(self):
         tmp_list = segments.segmentlist([])
-        for seg in self.exc_dict.values():
-            tmp_list.append(seg)
-        for seg in self.seg_dict.values():
-            tmp_list.append(seg)
-        for seg in self.bitmask_dict.values():
-            tmp_list.append(seg)
+        tmp_list.coalesce()
+        for seg_list in self.exc_dict.values():
+            tmp_list.extend(seg_list)
+        for seg_list in self.seg_dict.values():
+            tmp_list.extend(seg_list)
+        for seg_list in self.bitmask_dict.values():
+            tmp_list.extend(seg_list)
         tmp_list.coalesce()
         return tmp_list
 
@@ -62,16 +63,28 @@ def table_row_values(hwinj, exc_keys, seg_keys, bitmask_keys):
     cols.append(" ".join([str(id) for id in hwinj.gracedb_id]))
     cols.append(" ".join([str(time) for time in hwinj.gracedb_time]))
     for key in exc_keys:
-        seg = hwinj.exc_dict[key]
-        seg_str = "-".join(map(str, (seg[0], seg[1]))) + " "
+        seg_list = hwinj.exc_dict[key]
+        seg_str = ""
+        for seg in seg_list:
+            seg_str += "-".join(map(str, seg))
+            if seg != seg_list[-1]:
+                seg_str += " "
         cols.append(seg_str)
     for key in seg_keys:
-        seg = hwinj.seg_dict[key]
-        seg_str = "-".join(map(str, (seg[0], seg[1]))) + " "
+        seg_list = hwinj.seg_dict[key]
+        seg_str = ""
+        for seg in seg_list:
+            seg_str += "-".join(map(str, seg))
+            if seg != seg_list[-1]:
+                seg_str += " "
         cols.append(seg_str)
     for key in bitmask_keys:
-        seg = hwinj.bitmask_dict[key]
-        seg_str = "-".join(map(str, (seg[0], seg[1]))) + " "
+        seg_list = hwinj.bitmask_dict[key]
+        seg_str = ""
+        for seg in seg_list:
+            seg_str += "-".join(map(str, seg))
+            if seg != seg_list[-1]:
+                seg_str += " "
         cols.append(seg_str)
     cols.append(hwinj.schedule_entry)
     return cols
@@ -153,7 +166,7 @@ for line in lines:
     # create a HardwareInjection and append to the list
     if seg in analysis_time:
         hwinj = HardwareInjection(ifo)
-        hwinj.exc_dict[channel_flag] = seg
+        hwinj.exc_dict[channel_flag] = segments.segmentlist([seg])
         hwinj_list.append(hwinj)
 
 ##### check_segdb
@@ -182,14 +195,17 @@ for line in lines:
     match_found = False
     for hwinj in hwinj_list:
         if hwinj.ifo == ifo and hwinj.inj_seg.intersects_segment(seg):
-            hwinj.seg_dict[segment_flag] = seg
+            if segment_flag not in hwinj.seg_dict.keys():
+                hwinj.seg_dict[segment_flag] = segments.segmentlist([seg])
+            else:
+                hwinj.seg_dict[segment_flag].append(seg)
             match_found = True
             break
 
     # if there was no corresponding HardwareInjection then make one 
     if not match_found and seg in analysis_time:
         hwinj = HardwareInjection(ifo)
-        hwinj.seg_dict[segment_flag] = seg
+        hwinj.seg_dict[segment_flag] = segments.segmentlist([seg])
         tmp_list.append(hwinj)
 
 # add new HardwareInjection to list
@@ -221,14 +237,17 @@ for line in lines:
     match_found = False
     for hwinj in hwinj_list:
         if hwinj.ifo == ifo and hwinj.inj_seg.intersects_segment(seg):
-            hwinj.bitmask_dict[bitmask_name] = seg
+            if bitmask_name not in hwinj.seg_dict.keys():
+                hwinj.bitmask_dict[bitmask_name] = segments.segmentlist([seg])
+            else:
+                hwinj.bitmask_dict[bitmask_name].append(seg)
             match_found = True
             break
 
     # if there was no corresponding HardwareInjection then make one 
     if not match_found and seg in analysis_time:
         hwinj = HardwareInjection(ifo)
-        hwinj.bitmask_dict[bitmask_name] = seg
+        hwinj.bitmask_dict[bitmask_name] = segments.segmentlist([seg])
         tmp_list.append(hwinj)
 
 # add new HardwareInjection to list
