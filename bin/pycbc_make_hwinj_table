@@ -2,6 +2,7 @@
 
 import argparse
 import os
+import hwinj.results
 from glue import segments
 from jinja2 import Environment, FileSystemLoader
 
@@ -127,6 +128,14 @@ if not os.path.dirname(opts.output_html_file) == os.path.dirname(opts.output_csv
     raise ValueError("HTML and CSV outputs must be in the same directory.")
 if not os.path.dirname(opts.output_html_file) == os.path.dirname(opts.config_file):
     raise ValueError("HTML output and configuration file must be in the same directory.")
+
+# get correct path to template files
+if opts.template_file[0] != '/':
+    html_template_path = hwinj.results.__path__[0] + opts.html_template
+    csv_template_path = hwinj.results.__path__[0] + opts.csv_template
+else:
+    html_template_path = opts.html_template
+    csv_template_path = opts.csv_template
 
 ##### setup
 
@@ -322,8 +331,8 @@ hwinj_list = hwinj_list + tmp_list
 ##### output
 
 # render template
-template_dir = os.path.dirname(opts.html_template)
-template_filename = os.path.basename(opts.html_template)
+template_dir = os.path.dirname(html_template_path)
+template_filename = os.path.basename(html_template_path)
 env = Environment(loader=FileSystemLoader(template_dir))
 env.globals.update(len=len)
 env.globals.update(zip=zip)
@@ -344,8 +353,8 @@ with open(opts.output_html_file, "w") as fp:
     fp.write(html_output)
 
 # render template
-template_dir = os.path.dirname(opts.csv_template)
-template_filename = os.path.basename(opts.csv_template)
+template_dir = os.path.dirname(csv_template_path)
+template_filename = os.path.basename(csv_template_path)
 env = Environment(loader=FileSystemLoader(template_dir))
 env.globals.update(map=map)
 env.globals.update(str=str)
