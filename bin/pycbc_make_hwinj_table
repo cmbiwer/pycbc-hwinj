@@ -2,7 +2,8 @@
 
 import argparse
 import os
-import hwinj.results
+import shutil
+from hwinj import results
 from glue import segments
 from jinja2 import Environment, FileSystemLoader
 
@@ -130,11 +131,13 @@ if not os.path.dirname(opts.output_html_file) == os.path.dirname(opts.config_fil
     raise ValueError("HTML output and configuration file must be in the same directory.")
 
 # get correct path to template files
-if opts.template_file[0] != '/':
-    html_template_path = hwinj.results.__path__[0] + opts.html_template
-    csv_template_path = hwinj.results.__path__[0] + opts.csv_template
+if opts.html_template[0] != '/':
+    html_template_path = results.__path__[0] + "/" + opts.html_template
 else:
     html_template_path = opts.html_template
+if opts.csv_template[0] != '/':
+    csv_template_path = results.__path__[0] + "/" + opts.csv_template
+else:
     csv_template_path = opts.csv_template
 
 ##### setup
@@ -338,6 +341,7 @@ env.globals.update(len=len)
 env.globals.update(zip=zip)
 env.globals.update(table_row_keys=table_row_keys)
 env.globals.update(table_row_values=table_row_values)
+print template_dir, template_filename
 template = env.get_template(template_filename)
 context = {"analysis_time" : analysis_time,
            "csv_filename" : os.path.basename(opts.output_csv_file),
@@ -372,7 +376,7 @@ with open(opts.output_csv_file, "w") as fp:
     fp.write(csv_output)
 
 # copy statis files to html directory
-static_dir = pycbc.results.__path__[0] + '/static'
-static_output_dir = opts.output_path + '/static'
+static_dir = results.__path__[0] + '/static'
+static_output_dir = os.path.dirname(opts.output_html_file) + '/static'
 if not os.path.exists(static_output_dir):
     shutil.copytree(static_dir, static_output_dir)

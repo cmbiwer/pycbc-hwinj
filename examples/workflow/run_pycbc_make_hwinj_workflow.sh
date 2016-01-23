@@ -8,9 +8,9 @@ IFO2=L1
 START_TIME=1128672300
 END_TIME=1128672700
 
-TINJ_SCHEDULE_PATH=${PWD}/hwinj_svn/tinj/schedule
+TINJ_SCHEDULE_PATH=${PWD}/tinj/schedule
 
-EXE_DIR=${PWD}
+svn co https://daqsvn.ligo-la.caltech.edu/svn/injection/hwinj/Details/tinj/
 
 # change into run dir
 mkdir -p ${WORKFLOW_NAME}

@@ -3,7 +3,7 @@ from glue import segments
 from pycbc.frame import datafind_connection
 from pycbc import workflow
 
-def frame_paths(frame_types, start_time, end_time, server=None):
+def frame_paths(frame_type, start_time, end_time, server=None):
     #! FIXME: make this a pull request to use urltype in PyCBC frame module
     site = frame_type[0]
     connection = datafind_connection(server)
