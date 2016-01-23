@@ -19,7 +19,7 @@ CONFIG_FILE=${OUTPUT_DIR}/config.ini
 
 cp test/test/test_parsed.ini ${CONFIG_FILE}
 
-python pycbc_make_hwinj_table --start-time ${START_TIME} --end-time ${END_TIME} \
+pycbc_make_hwinj_table --start-time ${START_TIME} --end-time ${END_TIME} \
     --segment-file ${SEGMENT_FILE} \
     --excitation-file ${EXCITATION_FILE} \
     --bitmask-file ${BITMASK_FILE} \
@@ -29,4 +29,3 @@ python pycbc_make_hwinj_table --start-time ${START_TIME} --end-time ${END_TIME} 
     --output-html-file ${OUTPUT_HTML_FILE} \
     --output-csv-file ${OUTPUT_CSV_FILE}
 
-cp -r static ${OUTPUT_DIR}
