@@ -370,3 +370,9 @@ csv_output = template.render(context)
 # write output
 with open(opts.output_csv_file, "w") as fp:
     fp.write(csv_output)
+
+# copy statis files to html directory
+static_dir       = pycbc.results.__path__[0] + '/static'
+static_output_dir  = opts.output_path + '/static'
+if not os.path.exists(static_output_dir):
+    shutil.copytree(static_dir, static_output_dir)
