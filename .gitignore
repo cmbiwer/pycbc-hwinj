@@ -1,5 +1,5 @@
 build/*
 dist/*
 pycbc_hwinj.egg-info/*
-test/*
+examples/workflow/*/*
 workflow/*
