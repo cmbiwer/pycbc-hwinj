@@ -1,4 +1,18 @@
+import os
 from setuptools import setup
+
+def find_package_data(dirname):
+    def find_paths(dirname):
+        items = []
+        for fname in os.listdir(dirname):
+            path = os.path.join(dirname, fname)
+            if os.path.isdir(path):
+                items += find_paths(path)
+            elif not path.endswith(".py") and not path.endswith(".pyc"):
+                items.append(path)
+        return items
+    items = find_paths(dirname)
+    return [os.path.relpath(path, dirname) for path in items]
 
 project_name = "pycbc-hwinj"
 project_version = "0.1.dev0"
@@ -17,9 +31,10 @@ scripts_list = ["bin/pycbc_check_frame_excitation",
 ]
 
 packages_list = ["hwinj",
+                 "hwinj.results",
 ]
 
-data_dict = {
+data_dict = {"hwinj.results": find_package_data("hwinj/results")
 }
 
 setup(name=project_name,
@@ -31,5 +46,5 @@ setup(name=project_name,
       author_email=author_email,
       scripts=scripts_list,
       packages=packages_list,
-      package_data=data_dict,
+      package_data=data_dict, zip_safe=False,
 )

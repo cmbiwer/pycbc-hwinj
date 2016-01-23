@@ -3,3 +3,4 @@ dist/*
 pycbc_hwinj.egg-info/*
 examples/workflow/*/*
 workflow/*
+*.pyc
