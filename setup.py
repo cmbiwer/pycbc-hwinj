@@ -17,7 +17,7 @@ def find_package_data(dirname):
 project_name = "pycbc-hwinj"
 project_version = "0.1.dev0"
 project_url = "https://github.com/cmbiwer/pycbc-hwinjlog"
-project_description = "A python package for generating a workflow tht cross-checks LIGO's various hardware injection logs."
+project_description = "A python package for generating a workflow that cross-checks LIGO's various hardware injection logs."
 project_keywords = ["ligo", "physics"]
 
 author_name = "Christopher M. Biwer"
