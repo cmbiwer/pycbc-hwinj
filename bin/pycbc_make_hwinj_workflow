@@ -9,7 +9,7 @@ import shutil
 import ligo.gracedb.rest as gracedb_rest
 import Pegasus.DAX3 as dax
 from glue import segments
-from hwinj.frame import get_frame_files
+from pycbc_hwinj.frame import get_frame_files
 from pycbc import workflow
 from pycbc.workflow.core import make_external_call, OutSegFile
 

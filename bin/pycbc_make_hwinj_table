@@ -3,7 +3,7 @@
 import argparse
 import os
 import shutil
-from hwinj import results
+from pycbc_hwinj import results
 from glue import segments
 from jinja2 import Environment, FileSystemLoader
 

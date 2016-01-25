@@ -30,11 +30,11 @@ scripts_list = ["bin/pycbc_check_frame_excitation",
                 "bin/pycbc_make_hwinj_table",
 ]
 
-packages_list = ["hwinj",
-                 "hwinj.results",
+packages_list = ["pycbc_hwinj",
+                 "pycbc_hwinj.results",
 ]
 
-data_dict = {"hwinj.results": find_package_data("hwinj/results")
+data_dict = {"pycbc_hwinj.results": find_package_data("pycbc_hwinj/results")
 }
 
 setup(name=project_name,
