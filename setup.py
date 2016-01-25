@@ -46,5 +46,6 @@ setup(name=project_name,
       author_email=author_email,
       scripts=scripts_list,
       packages=packages_list,
-      package_data=data_dict, zip_safe=False,
+      package_data=data_dict,
+      zip_safe=False,
 )
