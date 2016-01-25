@@ -188,7 +188,7 @@ fp = open(opts.segment_file, "r")
 lines = fp.readlines()
 fp.close()
 
-# loop over CBC injection segments
+# loop over lines in segments file
 tmp_list = []
 for line in lines:
 
@@ -203,7 +203,7 @@ for line in lines:
     if segment_flag not in seg_names:
         seg_names.append(segment_flag)
 
-    # check if CBC injection flag
+    # check if corresponding HardwareInjection exists
     match_found = False
     for hwinj in hwinj_list:
         if hwinj.ifo == ifo and hwinj.inj_seg.intersects_segment(seg):
@@ -225,12 +225,12 @@ hwinj_list = hwinj_list + tmp_list
 
 ##### check_bitmask
 
-# read ODC segments
+# read bitmask segments
 fp = open(opts.bitmask_file, "r")
 lines = fp.readlines()
 fp.close()
 
-# loop over ODC segments
+# loop over lines in bitmask segments files
 tmp_list = []
 for line in lines:
 
@@ -341,7 +341,6 @@ env.globals.update(len=len)
 env.globals.update(zip=zip)
 env.globals.update(table_row_keys=table_row_keys)
 env.globals.update(table_row_values=table_row_values)
-print template_dir, template_filename
 template = env.get_template(template_filename)
 context = {"analysis_time" : analysis_time,
            "csv_filename" : os.path.basename(opts.output_csv_file),
