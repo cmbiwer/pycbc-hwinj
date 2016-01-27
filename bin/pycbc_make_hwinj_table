@@ -28,8 +28,8 @@ class HardwareInjection(object):
 
     def __repr__(self):
         return " ".join(map(str, [self.ifo, self.gracedb_id, self.gracedb_time,
-                        self.exc_dict, self.seg_dict,
-                        self.schedule, self.schedule_time]))
+                        self.exc_dict, self.seg_dict, self.bitmask_dict,
+                        self.schedule_entry]))
 
     @property
     def schedule_entry(self):
@@ -39,17 +39,17 @@ class HardwareInjection(object):
     @property
     def inj_seg(self, observation_segment_flag="DMT-ANALYSIS_READY:1"):
         tmp_list = segments.segmentlist([])
-        tmp_list.coalesce()
+        tmp_list
         for seg_list in self.exc_dict.values():
-            tmp_list.extend(seg_list.coalesce())
-            tmp_list.coalesce()
+            tmp_list.extend(seg_list)
+            tmp_list
         for key in self.seg_dict.keys():
             if key != observation_segment_flag:
-                tmp_list.extend(self.seg_dict[key].coalesce())
-                tmp_list.coalesce()
+                tmp_list.extend(self.seg_dict[key])
+                tmp_list
         for seg_list in self.bitmask_dict.values():
-            tmp_list.extend(seg_list.coalesce())
-            tmp_list.coalesce()
+            tmp_list.extend(seg_list)
+            tmp_list
         return tmp_list
 
 def table_row_keys(exc_keys, seg_keys, bitmask_keys):
@@ -229,14 +229,14 @@ for line in lines:
                 hwinj.seg_dict[segment_flag].append(seg)
             match_found = True
 
-            if segment_flag != opts.observation_segment_flag:
-                break
+#            if segment_flag != opts.observation_segment_flag:
+#                break
 
     # if there was no corresponding HardwareInjection then make one 
     if not match_found and seg in analysis_time and segment_flag != opts.observation_segment_flag:
-        hwinj = HardwareInjection(ifo)
-        hwinj.seg_dict[segment_flag] = segments.segmentlist([seg])
-        tmp_list.append(hwinj)
+        tmp_hwinj = HardwareInjection(ifo)
+        tmp_hwinj.seg_dict[segment_flag] = segments.segmentlist([seg])
+        tmp_list.append(tmp_hwinj)
 
         # add to list of names if not already there
         if segment_flag not in seg_names:
