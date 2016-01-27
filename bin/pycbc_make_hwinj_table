@@ -351,7 +351,6 @@ for trig in gracedb_trigs:
     for hwinj in hwinj_list:
         if hwinj.inj_seg:
             if trig[0] == "H216986":
-                print float(trig[1]), hwinj.inj_seg.protract(600), hwinj.schedule_entry
             if trig[2] == "HardwareInjection" \
                and float(trig[1]) in hwinj.inj_seg.protract(600):
                 hwinj.gracedb_id.append(trig[0])
