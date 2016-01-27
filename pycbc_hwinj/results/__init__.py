@@ -1,1 +1,1 @@
-from hwinj.results import *
+from pycbc_hwinj.results import *
