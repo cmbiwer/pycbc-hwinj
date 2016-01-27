@@ -50,6 +50,14 @@ class HardwareInjection(object):
         for seg_list in self.bitmask_dict.values():
             tmp_list.extend(seg_list)
             tmp_list
+        if self.schedule_time:
+            seg = segments.segment(self.schedule_time, self.schedule_time + 1)
+            seg_list = segments.segmentlist([seg])
+            tmp_list.extend(seg_list)
+        for time in self.gracedb_time:
+            seg = segments.segment(time, time + 1)
+            seg_list = segments.segmentlist([seg])
+            tmp_list.extend(seg_list)
         return tmp_list
 
 def table_row_keys(exc_keys, seg_keys, bitmask_keys):
@@ -307,7 +315,7 @@ for entry in schedule:
     # check if schedule
     match_found = False
     for hwinj in hwinj_list:
-        if float(entry[0]) in hwinj.inj_seg.protract(120):
+        if float(entry[0]) in hwinj.inj_seg.protract(600):
             hwinj.schedule_time = int(entry[0])
             hwinj.schedule_type = int(entry[1])
             hwinj.schedule_scale_factor = float(entry[2])
@@ -342,8 +350,10 @@ for trig in gracedb_trigs:
     match_found = None
     for hwinj in hwinj_list:
         if hwinj.inj_seg:
-            if hwinj.ifo in trig[3] and trig[2] == "HardwareInjection" \
-               and float(trig[1]) in hwinj.inj_seg.protract(120):
+            if trig[0] == "H216986":
+                print float(trig[1]), hwinj.inj_seg.protract(600), hwinj.schedule_entry
+            if trig[2] == "HardwareInjection" \
+               and float(trig[1]) in hwinj.inj_seg.protract(600):
                 hwinj.gracedb_id.append(trig[0])
                 hwinj.gracedb_time.append(float(trig[1]))
                 match_found = True
