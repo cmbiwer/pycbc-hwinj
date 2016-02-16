@@ -28,11 +28,11 @@
 
     <h4>CSV File</h4>
 
-    <p>A direct link to a CSV file with all the information in this table can found <a href="./{{csv_filename}}">here</a>.</p>
+    <p>A direct link to a CSV file with all the information in this table can found <a href="./{{csv_filename}}" target="_blank">here</a>.</p>
 
     <h4>Configuration</h4>
 
-    <p>A direct link to the configuration file that produced this page can found <a href="./{{config_filename}}">here</a>.</p>
+    <p>A direct link to the configuration file that produced this page can found <a href="./{{config_filename}}" target="_blank">here</a>.</p>
 
     <h4>Table of Hardware Injections</h4>
 
@@ -42,9 +42,7 @@
                                        data-show-toggle="true"
                                        data-show-columns="true"
                                        data-show-export="true"
-                                       {% if not display_all %}
-                                         data-pagination="true"
-                                       {% endif %}
+                                       data-pagination="false"
                                        data-mobile-responsive="true">
         <thead>
             <tr>
