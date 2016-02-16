@@ -73,7 +73,6 @@ for subsection in wf.cp.get_subsections(exe_name):
     frame_type = wf.cp.get_opt_tags(exe_name, "frame-type", [subsection])
     channel_name = wf.cp.get_opt_tags(exe_name, "channel-name", [subsection])
     ifo = channel_name.split(":")[0]
-    tag = channel_name.split(":")[1].replace("-", "_")
 
     # print statement
     logging.info("Creating %s workflow nodes for %s", exe_name, channel_name)
@@ -81,7 +80,7 @@ for subsection in wf.cp.get_subsections(exe_name):
     # setup executable to check for excitations in channel
     check_exc_files = workflow.FileList([])
     check_exc_exe = workflow.Executable(wf.cp, exe_name, ifos=ifo, universe="local",
-                                        out_dir=check_exc_dir, tags=[tag])
+                                        out_dir=check_exc_dir, tags=[subsection])
 
     # see if frame files already in workflow and if not then add them
     tmp_files = get_frame_files(wf, frame_files, ifo, frame_type)
@@ -99,7 +98,6 @@ for subsection in wf.cp.get_subsections(exe_name):
         # make a node in the workflow to check for excitations
         check_exc_node = check_exc_exe.create_node()
         check_exc_node.add_input_list_opt("--frame-files", node_frame_files)
-        check_exc_node.add_opt("--channel-name", channel_name)
         check_exc_node.add_opt("--start-time", node_seg[0])
         check_exc_node.add_opt("--end-time", node_seg[1])
         check_exc_file = check_exc_node.new_output_file_opt(node_seg, "txt", "--output-file")
@@ -119,7 +117,6 @@ for subsection in wf.cp.get_subsections(exe_name):
     frame_type = wf.cp.get_opt_tags(exe_name, "frame-type", [subsection])
     channel_name = wf.cp.get_opt_tags(exe_name, "channel-name", [subsection])
     bitmask_name = wf.cp.get_opt_tags(exe_name, "bitmask-name", [subsection])
-    bitmask = wf.cp.get_opt_tags(exe_name, "bitmask", [subsection])
     ifo = channel_name.split(":")[0]
 
     # print statement
@@ -127,7 +124,7 @@ for subsection in wf.cp.get_subsections(exe_name):
 
     # setup executable to check for ODC bit transitions in channel
     check_bitmask_exe = workflow.Executable(wf.cp, exe_name, ifos=ifo, universe="local",
-                                        out_dir=check_bitmask_dir, tags=[bitmask_name])
+                                        out_dir=check_bitmask_dir, tags=[subsection])
 
     # see if frame files already in workflow and if not then add them
     tmp_files = get_frame_files(wf, frame_files, ifo, frame_type)
@@ -145,9 +142,6 @@ for subsection in wf.cp.get_subsections(exe_name):
         # make a node in the workflow to check for excitations
         check_bitmask_node = check_bitmask_exe.create_node()
         check_bitmask_node.add_input_list_opt("--frame-files", node_frame_files)
-        check_bitmask_node.add_opt("--channel-name", channel_name)
-        check_bitmask_node.add_opt("--bitmask-name", bitmask_name)
-        check_bitmask_node.add_opt("--bitmask", bitmask)
         check_bitmask_node.add_opt("--start-time", node_seg[0])
         check_bitmask_node.add_opt("--end-time", node_seg[1])
         check_bitmask_file = check_bitmask_node.new_output_file_opt(node_seg, "txt", "--output-file")
@@ -199,7 +193,7 @@ for subsection in wf.cp.get_subsections(exe_name):
                                    None, None, None])
     seg_file = OutSegFile(ifo, "CHECK_SEGDB",
                           wf.analysis_time, seg_url, segment_list=[],
-                                  tags=[segment_flag])
+                                  tags=[subsection])
     seg_file.PFN(output_path, site="local")
     segment_files[ifo].append(seg_file)
 

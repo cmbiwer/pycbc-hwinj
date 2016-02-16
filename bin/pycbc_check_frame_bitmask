@@ -11,8 +11,8 @@ from operator import itemgetter
 from pycbc.frame import read_frame
 
 # command line usage
-parser = argparse.ArgumentParser(usage='pycbc_check_frame_excitations [--options]',
-                                 description="Check for non-zero values in a frame channel.")
+parser = argparse.ArgumentParser(usage="pycbc_check_frame_bitmask [--options]",
+                                 description="Apply bitmask to channel and get for segments.")
 
 # command line options
 parser.add_argument("--frame-files", type=str, nargs="+", required=True,
@@ -29,6 +29,10 @@ parser.add_argument("--end-time", type=int, required=True,
                     help="GPS time to stop reading data.")
 parser.add_argument("--output-file", type=str, required=True,
                     help="Output file with segments.")
+parser.add_argument("--flip-bits", action="store_true",
+                    help="Takes 1 minus the value of the channel.")
+parser.add_argument("--pad-seconds", type=float, default=0.1,
+                    help="Seconds to pad segments when finding union.")
 
 # parse command line
 opts = parser.parse_args()
@@ -41,20 +45,28 @@ except RuntimeError:
     fp.close()
     sys.exit()
 
+# typecast as integer
+if data.dtype in [np.float32]:
+    data = data.astype(np.uint32) 
+
 # use bitmask
 bits = ( data.numpy() & opts.bitmask ) == opts.bitmask
-bits = 1 - bits
+
+# if want not of the channel data
+if opts.flip_bits:
+    bits = 1 - bits
 
 # get segments where bit is active
 segs = from_bitstream(bits, data.start_time, data.delta_t)
-segs = segments.segmentlist([segments.segment(s[0], s[1]) for s in segs])
+segs = segments.segmentlist([segments.segment(seg[0], seg[1]) for seg in segs])
+segs.coalesce()
 
 # pad segments by a fraction of a second
-pad_seconds = 0.1
-segs = segments.segmentlist([seg.protract(0.1) for seg in segs])
+segs = segments.segmentlist([seg.protract(opts.pad_seconds) for seg in segs])
 
 # find the union of segments
 segs.coalesce()
+segs.contract(opts.pad_seconds)
 
 # write segments to file
 with open(opts.output_file, "w") as fp:
