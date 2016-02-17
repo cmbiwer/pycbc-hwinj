@@ -350,7 +350,6 @@ for trig in gracedb_trigs:
     match_found = None
     for hwinj in hwinj_list:
         if hwinj.inj_seg:
-            if trig[0] == "H216986":
             if trig[2] == "HardwareInjection" \
                and float(trig[1]) in hwinj.inj_seg.protract(600):
                 hwinj.gracedb_id.append(trig[0])

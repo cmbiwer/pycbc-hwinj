@@ -15,6 +15,8 @@ parser = argparse.ArgumentParser(usage='pycbc_check_frame_excitations [--options
 # command line options
 parser.add_argument("--frame-files", type=str, nargs="+", required=True,
                     help="Frame files to read.")
+parser.add_argument("--frame-type", type=str,
+                    help="Frame type of frame files.")
 parser.add_argument("--channel-name", type=str, required=True,
                     help="Channel name to read.")
 parser.add_argument("--start-time", type=int, required=True,

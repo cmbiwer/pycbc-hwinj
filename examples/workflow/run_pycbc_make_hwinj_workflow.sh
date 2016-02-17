@@ -31,4 +31,4 @@ export _CONDOR_DAGMAN_MAX_JOBS_SUBMITTED=16
 
 # plan and submit the workflow
 cd ${WORKFLOW_NAME}
-#pycbc_submit_dax --accounting-group ligo.dev.o1.detchar.explore.test --dax ${WORKFLOW_NAME}.dax
+pycbc_submit_dax --accounting-group ligo.dev.o1.detchar.explore.test --dax ${WORKFLOW_NAME}.dax
