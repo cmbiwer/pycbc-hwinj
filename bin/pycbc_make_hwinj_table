@@ -74,7 +74,7 @@ class HardwareInjection(object):
     }
 
 def table_row_keys(exc_keys, seg_keys, bitmask_keys, check_keys):
-    cols = ["IFO", "GraceDB IDs", "GraceDB Times"]
+    cols = ["IFO", "GraceDB IDs", "GraceDB Times", "All checks passed"]
     for key in check_keys:
         cols.append(key)
     for key in exc_keys:
@@ -90,9 +90,18 @@ def table_row_values(hwinj, exc_keys, seg_keys, bitmask_keys, check_keys):
     cols = [hwinj.ifo] 
     cols.append(" ".join([str(id) for id in hwinj.gracedb_id]))
     cols.append(" ".join([str(time) for time in hwinj.gracedb_time]))
+    all_checks_str = ""
+    for key in check_keys:
+        if not hwinj.check_dict[key](hwinj):
+            all_checks_str = ""
+            break
+        all_checks_str = "&#10004"
+    cols.append(all_checks_str)
     for key in check_keys:
         if hwinj.check_dict[key](hwinj):
             cols.append("&#10004")
+        else:
+            cols.append("")
     for key in exc_keys:
         if key in hwinj.exc_dict.keys():
             seg_list = hwinj.exc_dict[key]
