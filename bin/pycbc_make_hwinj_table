@@ -70,7 +70,7 @@ class HardwareInjection(object):
         return True
 
     check_dict = {
-        "Check single excitation" : check_single_excitation,
+        "Single excitation recorded" : check_single_excitation,
     }
 
 def table_row_keys(exc_keys, seg_keys, bitmask_keys, check_keys):
