@@ -8,6 +8,7 @@ from glue import segments
 from jinja2 import Environment, FileSystemLoader
 
 class HardwareInjection(object):
+
     def __init__(self, ifo):
 
         self.ifo = ifo
@@ -60,8 +61,22 @@ class HardwareInjection(object):
             tmp_list.extend(seg_list)
         return tmp_list
 
-def table_row_keys(exc_keys, seg_keys, bitmask_keys):
+    def check_single_excitation(self):
+        if len(self.exc_dict.keys()) > 1:
+            return False
+        for key in self.exc_dict.keys():
+            if len(self.exc_dict[key]) > 1:
+                return False
+        return True
+
+    check_dict = {
+        "Check single excitation" : check_single_excitation,
+    }
+
+def table_row_keys(exc_keys, seg_keys, bitmask_keys, check_keys):
     cols = ["IFO", "GraceDB IDs", "GraceDB Times"]
+    for key in check_keys:
+        cols.append(key)
     for key in exc_keys:
         cols.append("Excitations from "+key)
     for key in seg_keys:
@@ -71,10 +86,13 @@ def table_row_keys(exc_keys, seg_keys, bitmask_keys):
     cols.append("Schedule")
     return cols
 
-def table_row_values(hwinj, exc_keys, seg_keys, bitmask_keys):
+def table_row_values(hwinj, exc_keys, seg_keys, bitmask_keys, check_keys):
     cols = [hwinj.ifo] 
     cols.append(" ".join([str(id) for id in hwinj.gracedb_id]))
     cols.append(" ".join([str(time) for time in hwinj.gracedb_time]))
+    for key in check_keys:
+        if hwinj.check_dict[key](hwinj):
+            cols.append("&#10004")
     for key in exc_keys:
         if key in hwinj.exc_dict.keys():
             seg_list = hwinj.exc_dict[key]
@@ -167,11 +185,14 @@ else:
 # create a list to hold all the hardware injections
 hwinj_list = []
 
-# create lists to hold all segment and channel names
+# create lists to hold all segment, bitmask, and channel names
 exc_names = []
 seg_names = []
 bitmask_names = []
-vector_names = []
+
+# create list to hold all checks
+check_names = HardwareInjection.check_dict.keys()
+check_names.sort()
 
 # time of analysis
 analysis_time = segments.segment(opts.start_time, opts.end_time)
@@ -376,6 +397,7 @@ env.globals.update(len=len)
 env.globals.update(zip=zip)
 env.globals.update(table_row_keys=table_row_keys)
 env.globals.update(table_row_values=table_row_values)
+env.globals.update(HardwareInjection=HardwareInjection)
 template = env.get_template(template_filename)
 context = {"analysis_time" : analysis_time,
            "csv_filename" : os.path.basename(opts.output_csv_file),
@@ -383,7 +405,8 @@ context = {"analysis_time" : analysis_time,
            "hwinj_list" : hwinj_list,
            "exc_names" : exc_names,
            "seg_names" : seg_names,
-           "bitmask_names" : bitmask_names}
+           "bitmask_names" : bitmask_names,
+           "check_names" : check_names}
 html_output = template.render(context)
 
 # write output
@@ -398,11 +421,13 @@ env.globals.update(map=map)
 env.globals.update(str=str)
 env.globals.update(table_row_keys=table_row_keys)
 env.globals.update(table_row_values=table_row_values)
+env.globals.update(HardwareInjection=HardwareInjection)
 template = env.get_template(template_filename)
 context = {"hwinj_list" : hwinj_list,
            "exc_names" : exc_names,
            "seg_names" : seg_names,
-           "bitmask_names" : bitmask_names}
+           "bitmask_names" : bitmask_names,
+           "check_names" : check_names}
 csv_output = template.render(context)
 
 # write output

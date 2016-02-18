@@ -46,7 +46,7 @@
                                        data-mobile-responsive="true">
         <thead>
             <tr>
-                {% for key in table_row_keys(exc_names, seg_names, bitmask_names) %}
+                {% for key in table_row_keys(exc_names, seg_names, bitmask_names, check_names) %}
                 <th data-sortable="true">{{key}}</th>
                 {% endfor %}
             </tr>
@@ -55,7 +55,7 @@
         <tbody>
             {% for hwinj in hwinj_list %}
             <tr>
-                {% for val in table_row_values(hwinj, exc_names, seg_names, bitmask_names) %}
+                {% for val in table_row_values(hwinj, exc_names, seg_names, bitmask_names, check_names) %}
                 <td>{{val}}</td>
                 {% endfor %}
             </tr>
