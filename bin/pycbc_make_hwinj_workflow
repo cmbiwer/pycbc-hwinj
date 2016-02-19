@@ -78,7 +78,6 @@ for subsection in wf.cp.get_subsections(exe_name):
     logging.info("Creating %s workflow nodes for %s", exe_name, channel_name)
 
     # setup executable to check for excitations in channel
-    check_exc_files = workflow.FileList([])
     check_exc_exe = workflow.Executable(wf.cp, exe_name, ifos=ifo, universe="local",
                                         out_dir=check_exc_dir, tags=[subsection])
 
@@ -101,8 +100,10 @@ for subsection in wf.cp.get_subsections(exe_name):
         check_exc_node.add_opt("--start-time", node_seg[0])
         check_exc_node.add_opt("--end-time", node_seg[1])
         check_exc_file = check_exc_node.new_output_file_opt(node_seg, "txt", "--output-file")
-        check_exc_files.append(check_exc_file)
         wf.add_node(check_exc_node)
+
+        # add output file to list of excitation files
+        check_exc_files.append(check_exc_file)
 
 ##### check_bitmask
 
@@ -145,18 +146,17 @@ for subsection in wf.cp.get_subsections(exe_name):
         check_bitmask_node.add_opt("--start-time", node_seg[0])
         check_bitmask_node.add_opt("--end-time", node_seg[1])
         check_bitmask_file = check_bitmask_node.new_output_file_opt(node_seg, "txt", "--output-file")
-        check_bitmask_files.append(check_bitmask_file)
         wf.add_node(check_bitmask_node)
+
+        # add output file to list of bitmask files
+        check_bitmask_files.append(check_bitmask_file)
 
 ##### check_segdb
 
-# make a dict to hold segment files for each IFO
+# make a dict for olding output files for each IFO
 segment_files = {}
 for ifo in wf.ifos:
     segment_files[ifo] = workflow.FileList([])
-
-# create list for holding output files
-check_segdb_files = workflow.FileList([])
 
 # loop over subsections of config file for check_exc executable
 exe_name = "check_segdb"
@@ -234,6 +234,12 @@ if os.path.exists(schedule_path):
     path = os.path.join(check_schedule_dir, ifos + "-" + "SCHEDULE" + "-" + str(wf.analysis_time[0]) + "-" + str(abs(wf.analysis_time)) + ".txt")
     schedule_file = workflow.File(ifos, "SCHEDULE", wf.analysis_time, file_url="file://localhost" + path)
     shutil.copy(schedule_path, path)
+
+##### cat check_exc
+
+#### cat check_bitmask
+
+#### cat check_segdb
 
 ##### finish
 
