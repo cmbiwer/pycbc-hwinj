@@ -8,20 +8,28 @@ from glue import segments
 from jinja2 import Environment, FileSystemLoader
 
 class HardwareInjection(object):
+    """ Class that represents a hardware injection.
+    """
 
     def __init__(self, ifo):
 
+        # set a string to idenity IFO
         self.ifo = ifo
 
+        # a dict that holds all excitation segments
         self.exc_dict = segments.segmentlistdict()
 
+        # a dict that holds all segments from the segdb
         self.seg_dict = segments.segmentlistdict()
 
+        # a dict that holds all segments from bitmasked channels
         self.bitmask_dict = segments.segmentlistdict()
 
+        # GraceDB information about hardware injection
         self.gracedb_id = []
         self.gracedb_time = []
 
+        # schedule information about hardware injection
         self.schedule_time = None
         self.schedule_type = None
         self.schedule_scale_factor = None
@@ -34,11 +42,18 @@ class HardwareInjection(object):
 
     @property
     def schedule_entry(self):
+        """ Returns line from schedule file.
+        """
+
         return " ".join(map(str, [self.schedule_time, self.schedule_type,
                                   self.schedule_scale_factor, self.schedule_prefix]))
 
     @property
     def inj_seg(self, observation_segment_flag="DMT-ANALYSIS_READY:1"):
+        """ Returns a segmnetlist that is the union of all excitation,
+        segdb and bitmasked channels.
+        """
+
         tmp_list = segments.segmentlist([])
         tmp_list
         for seg_list in self.exc_dict.values():
@@ -62,6 +77,8 @@ class HardwareInjection(object):
         return tmp_list
 
     def check_single_excitation(self):
+        """ Logical check that there was only one excitation at the time.
+        """
         if len(self.exc_dict.keys()) > 1:
             return False
         for key in self.exc_dict.keys():
@@ -69,11 +86,15 @@ class HardwareInjection(object):
                 return False
         return True
 
+    # a dict that defines all checks for HardwareInjection
     check_dict = {
         "Single excitation recorded" : check_single_excitation,
     }
 
 def table_row_keys(exc_keys, seg_keys, bitmask_keys, check_keys):
+    """ Returns a list of column labels.
+    """
+
     cols = ["IFO", "GraceDB IDs", "GraceDB Times", "All checks passed"]
     for key in check_keys:
         cols.append(key)
@@ -87,6 +108,9 @@ def table_row_keys(exc_keys, seg_keys, bitmask_keys, check_keys):
     return cols
 
 def table_row_values(hwinj, exc_keys, seg_keys, bitmask_keys, check_keys):
+    """ Returns a list of column values for a HardwareInjection.
+    """
+
     cols = [hwinj.ifo] 
     cols.append(" ".join([str(id) for id in hwinj.gracedb_id]))
     cols.append(" ".join([str(time) for time in hwinj.gracedb_time]))
