@@ -1,6 +1,6 @@
 #! /bin/bash
 
-WORKFLOW_NAME=test2
+WORKFLOW_NAME=test4
 CONFIG_FILE=${PWD}/config_h1.ini
 
 IFO1=H1
@@ -11,6 +11,8 @@ START_TIME=1128672300
 END_TIME=1128672700
 
 TINJ_SCHEDULE_PATH=${PWD}/tinj/schedule
+
+RESULTS_DIR=${HOME}/public_html/hwinj_log/${WORKFLOW_NAME}
 
 #svn co https://daqsvn.ligo-la.caltech.edu/svn/injection/hwinj/Details/tinj/
 
@@ -24,7 +26,8 @@ pycbc_make_hwinj_workflow --name ${WORKFLOW_NAME} \
         workflow:end-time:${END_TIME} \
         workflow-ifos:${IFO1} \
         workflow-ifos:${IFO2} \
-        workflow-schedule:schedule-path:${TINJ_SCHEDULE_PATH}
+        workflow-schedule:schedule-path:${TINJ_SCHEDULE_PATH} \
+        workflow-results:results-dir:${RESULTS_DIR}
 
 # limit workflow to only 16 jobs
 export _CONDOR_DAGMAN_MAX_JOBS_SUBMITTED=16

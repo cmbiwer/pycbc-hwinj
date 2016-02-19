@@ -23,18 +23,22 @@ project_keywords = ["ligo", "physics"]
 author_name = "Christopher M. Biwer"
 author_email = "cmbiwer@gmail.com"
 
-scripts_list = ["bin/pycbc_check_frame_excitation",
-                "bin/pycbc_check_frame_bitmask",
-                "bin/pycbc_convert_segment_csv",
-                "bin/pycbc_make_hwinj_workflow",
-                "bin/pycbc_make_hwinj_table",
+scripts_list = [
+    "bin/pycbc_check_frame_excitation",
+    "bin/pycbc_check_frame_bitmask",
+    "bin/pycbc_cat_frame_data",
+    "bin/pycbc_cat_segdb_data",
+    "bin/pycbc_make_hwinj_workflow",
+    "bin/pycbc_make_hwinj_table",
 ]
 
-packages_list = ["pycbc_hwinj",
-                 "pycbc_hwinj.results",
+packages_list = [
+    "pycbc_hwinj",
+    "pycbc_hwinj.results",
 ]
 
-data_dict = {"pycbc_hwinj.results": find_package_data("pycbc_hwinj/results")
+data_dict = {
+    "pycbc_hwinj.results": find_package_data("pycbc_hwinj/results"),
 }
 
 setup(name=project_name,

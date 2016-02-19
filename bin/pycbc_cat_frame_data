@@ -4,7 +4,7 @@ import argparse
 from pycbc_hwinj.io import read_entry
 
 # command line usage
-parser = argparse.ArgumentParser(usage="pycbc_cat_csv_files [--options]",
+parser = argparse.ArgumentParser(usage="pycbc_cat_frame_data [--options]",
                                  description="Merge entries into a single file.")
 
 # command line options

@@ -21,14 +21,14 @@ parser = argparse.ArgumentParser(usage="pycbc_make_cal_workflow [--options]",
 parser.add_argument("--name", type=str, required=True,
                     help="Descriptive name of the analysis.")
 workflow.add_workflow_command_line_group(parser)
-args = parser.parse_args()
+opts = parser.parse_args()
 
 # setup log
 logging.basicConfig(format="%(asctime)s:%(levelname)s : %(message)s",
                     level=logging.INFO,datefmt="%I:%M:%S")
 
 # directory names
-run_dir = os.path.join(os.getcwd(), args.name)
+run_dir = os.path.join(os.getcwd(), opts.name)
 datafind_dir = os.path.join(run_dir, "datafind")
 check_segdb_dir = os.path.join(run_dir, "check_segdb")
 check_exc_dir = os.path.join(run_dir, "check_exc")
@@ -50,7 +50,7 @@ if not os.path.exists(check_schedule_dir):
 os.chdir(run_dir)
 
 # setup workflow
-wf = workflow.Workflow(args, args.name)
+wf = workflow.Workflow(opts, opts.name)
 
 # make a dict to hold frame files for each IFO
 frame_files = {}
@@ -153,10 +153,8 @@ for subsection in wf.cp.get_subsections(exe_name):
 
 ##### check_segdb
 
-# make a dict for olding output files for each IFO
-segment_files = {}
-for ifo in wf.ifos:
-    segment_files[ifo] = workflow.FileList([])
+# create list for holding output files
+check_segdb_files = workflow.FileList([])
 
 # loop over subsections of config file for check_exc executable
 exe_name = "check_segdb"
@@ -195,7 +193,7 @@ for subsection in wf.cp.get_subsections(exe_name):
                           wf.analysis_time, seg_url, segment_list=[],
                                   tags=[subsection])
     seg_file.PFN(output_path, site="local")
-    segment_files[ifo].append(seg_file)
+    check_segdb_files.append(seg_file)
 
 ##### check_gracedb
 
@@ -218,11 +216,15 @@ with open(path, "w") as fp:
         ])) + "\n"
         fp.write(line)
 gracedb_file = workflow.File(ifos, "GRACEDB", wf.analysis_time, file_url="file://localhost" + path)
+gracedb_file.PFN(path, site="local")
 
 ##### check_schedule
 
 # get tinj schedule
 schedule_path = wf.cp.get("workflow-schedule", "schedule-path")
+
+# print statement
+logging.info("Retrieving schedule file from %s", schedule_path)
 
 # check if schedule exists
 if os.path.exists(schedule_path):
@@ -233,13 +235,130 @@ if os.path.exists(schedule_path):
     # copy schedule to run directory
     path = os.path.join(check_schedule_dir, ifos + "-" + "SCHEDULE" + "-" + str(wf.analysis_time[0]) + "-" + str(abs(wf.analysis_time)) + ".txt")
     schedule_file = workflow.File(ifos, "SCHEDULE", wf.analysis_time, file_url="file://localhost" + path)
+    schedule_file.PFN(path, site="local")
     shutil.copy(schedule_path, path)
 
 ##### cat check_exc
 
-#### cat check_bitmask
+# create an Executable for concatenating excitation files
+exe_name = "cat_frame_data"
+tag = "EXC"
+cat_exc_exe = workflow.Executable(wf.cp, exe_name, ifos=wf.ifo_string, universe="vanilla",
+                                        out_dir=check_exc_dir, tags=[tag])
 
-#### cat check_segdb
+# print statement
+logging.info("Creating %s workflow node", exe_name)
+
+# create a node
+cat_exc_node = cat_exc_exe.create_node()
+
+# add options
+cat_exc_node.add_input_list_opt("--input-files", check_exc_files)
+cat_exc_file = cat_exc_node.new_output_file_opt(wf.analysis_time, "txt", "--output-file")
+
+# add node to workflow
+wf.add_node(cat_exc_node)
+
+##### cat check_bitmask
+
+# create an Executable for concatenating bitmask files
+exe_name = "cat_frame_data"
+tag = "EXC"
+cat_bitmask_exe = workflow.Executable(wf.cp, exe_name, ifos=wf.ifo_string, universe="vanilla",
+                                        out_dir=check_exc_dir, tags=[tag])
+
+# print statement
+logging.info("Creating %s workflow node", exe_name)
+
+# create a node
+cat_bitmask_node = cat_bitmask_exe.create_node()
+
+# add options
+cat_bitmask_node.add_input_list_opt("--input-files", check_bitmask_files)
+cat_bitmask_file = cat_bitmask_node.new_output_file_opt(wf.analysis_time, "txt", "--output-file")
+
+# add node to workflow
+wf.add_node(cat_bitmask_node)
+
+##### cat check_bitmask
+
+# create an Executable for concatenating bitmask files
+exe_name = "cat_frame_data"
+tag = "BITMASK"
+cat_bitmask_exe = workflow.Executable(wf.cp, exe_name, ifos=wf.ifo_string, universe="vanilla",
+                                        out_dir=check_bitmask_dir, tags=[tag])
+
+# print statement
+logging.info("Creating %s workflow node", exe_name)
+
+# create a node
+cat_bitmask_node = cat_bitmask_exe.create_node()
+
+# add options
+cat_bitmask_node.add_input_list_opt("--input-files", check_bitmask_files)
+cat_bitmask_file = cat_bitmask_node.new_output_file_opt(wf.analysis_time, "txt", "--output-file")
+
+# add node to workflow
+wf.add_node(cat_bitmask_node)
+
+##### cat check_segdb
+
+# create an Executable for concatenating excitation files
+exe_name = "cat_segdb_data"
+cat_segdb_exe = workflow.Executable(wf.cp, exe_name, ifos=wf.ifo_string, universe="vanilla",
+                                        out_dir=check_segdb_dir, tags=[])
+
+# print statement
+logging.info("Creating %s workflow node", exe_name)
+
+# create a node
+cat_segdb_node = cat_segdb_exe.create_node()
+
+# add options
+cat_segdb_node.add_input_list_opt("--segment-files", check_segdb_files)
+cat_segdb_file = cat_segdb_node.new_output_file_opt(wf.analysis_time, "txt", "--output-file")
+
+# add node to workflow
+wf.add_node(cat_segdb_node)
+
+##### make_table
+
+# make sure results directory exists
+results_dir = wf.cp.get_opt_tags("workflow-results", "results-dir", [])
+if not os.path.exists(results_dir):
+    os.makedirs(results_dir)
+
+# create an Executable for creating the html table
+exe_name = "make_table"
+make_table_exe = workflow.Executable(wf.cp, exe_name, ifos=wf.ifo_string, universe="local",
+                                        out_dir=results_dir, tags=[])
+
+# print statement
+logging.info("Creating %s workflow node", exe_name)
+
+# this is not optimal since we assume where the parsed config
+# file will be but right now there is not a way around this
+path = run_dir + "/" + opts.name + "_parsed.ini"
+config_file = workflow.File(ifos, "CONFIG", wf.analysis_time, file_url="file://localhost" + path)
+config_file.PFN(path, site="local")
+
+# create a node
+make_table_node = make_table_exe.create_node()
+
+# add options
+make_table_node.add_input_opt("--excitation-file", cat_exc_file)
+make_table_node.add_input_opt("--bitmask-file", cat_bitmask_file)
+make_table_node.add_input_opt("--gracedb-file", gracedb_file)
+make_table_node.add_input_opt("--segment-file", cat_segdb_file)
+make_table_node.add_input_opt("--schedule-file", schedule_file)
+make_table_node.add_input_opt("--config-file", config_file)
+make_table_node.add_opt("--start-time", wf.analysis_time[0])
+make_table_node.add_opt("--end-time", wf.analysis_time[1])
+make_table_html_file = make_table_node.new_output_file_opt(wf.analysis_time, "html", "--output-html-file")
+make_table_csv_file = make_table_node.new_output_file_opt(wf.analysis_time, "csv", "--output-csv-file")
+
+# add node to workflow
+wf.add_node(make_table_node)
 
 ##### finish
 
@@ -248,5 +367,4 @@ wf.save()
 
 # done
 logging.info("Done")
-
 
