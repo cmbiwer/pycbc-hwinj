@@ -9,6 +9,7 @@ from itertools import groupby
 from math import ceil, floor
 from operator import itemgetter
 from pycbc.frame import read_frame
+from pycbc_hwinj.io import DataEntry
 
 # command line usage
 parser = argparse.ArgumentParser(usage="pycbc_check_frame_bitmask [--options]",
@@ -39,7 +40,7 @@ parser.add_argument("--pad-seconds", type=float, default=0.1,
 # parse command line
 opts = parser.parse_args()
 
-# read ODC channel
+# read channel
 try:
     data = read_frame(opts.frame_files, opts.channel_name, opts.start_time, opts.end_time)
 except RuntimeError:
@@ -73,5 +74,6 @@ segs.contract(opts.pad_seconds)
 # write segments to file
 with open(opts.output_file, "w") as fp:
     for seg in segs:
-        line = ",".join(map(str, [opts.channel_name, opts.bitmask_name, opts.bitmask, seg[0], seg[1]])) + "\n"
-        fp.write(line)
+        entry = DataEntry(opts.channel_name, seg, description=opts.bitmask_name,
+                          bitmask=opts.bitmask)
+        fp.write(entry.write() + "\n")
