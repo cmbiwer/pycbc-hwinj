@@ -279,14 +279,16 @@ env.globals.update(table_row_keys=table_row_keys)
 env.globals.update(table_row_values=table_row_values)
 env.globals.update(HardwareInjection=HardwareInjection)
 template = env.get_template(template_filename)
-context = {"analysis_time" : analysis_time,
-           "csv_filename" : os.path.basename(opts.output_csv_file),
-           "config_filename" : os.path.basename(opts.config_file),
-           "hwinj_list" : hwinj_list,
-           "exc_names" : exc_names,
-           "seg_names" : seg_names,
-           "bitmask_names" : bitmask_names,
-           "check_names" : check_names}
+context = {
+    "analysis_time" : analysis_time,
+    "csv_filename" : os.path.basename(opts.output_csv_file),
+    "config_filename" : os.path.basename(opts.config_file),
+    "hwinj_list" : hwinj_list,
+    "exc_names" : exc_names,
+    "seg_names" : seg_names,
+    "bitmask_names" : bitmask_names,
+    "check_names" : check_names,
+}
 html_output = template.render(context)
 
 # write output
@@ -303,11 +305,13 @@ env.globals.update(table_row_keys=table_row_keys)
 env.globals.update(table_row_values=table_row_values)
 env.globals.update(HardwareInjection=HardwareInjection)
 template = env.get_template(template_filename)
-context = {"hwinj_list" : hwinj_list,
-           "exc_names" : exc_names,
-           "seg_names" : seg_names,
-           "bitmask_names" : bitmask_names,
-           "check_names" : check_names}
+context = {
+    "hwinj_list" : hwinj_list,
+    "exc_names" : exc_names,
+    "seg_names" : seg_names,
+    "bitmask_names" : bitmask_names,
+    "check_names" : check_names,
+}
 csv_output = template.render(context)
 
 # write output
