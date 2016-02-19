@@ -2,11 +2,7 @@
 
 import argparse
 import os
-import numpy as np
 from glue import segments
-from itertools import groupby
-from operator import itemgetter
-from pycbc.frame import read_frame
 from pycbc.workflow.segment import fromsegmentxml
 
 # command line usage
