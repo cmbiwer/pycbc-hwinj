@@ -72,6 +72,7 @@ class HardwareInjection(object):
     def check_single_excitation(self):
         """ Logical check that there was only one excitation at the time.
         """
+
         if len(self.exc_dict.keys()) > 1:
             return False
         for key in self.exc_dict.keys():
