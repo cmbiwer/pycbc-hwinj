@@ -95,15 +95,16 @@ for subsection in wf.cp.get_subsections(exe_name):
         node_frame_files = [tmp_file for tmp_file in tmp_files if tmp_file.segment.intersects(node_seg)]
 
         # make a node in the workflow to check for excitations
-        check_exc_node = check_exc_exe.create_node()
-        check_exc_node.add_input_list_opt("--frame-files", node_frame_files)
-        check_exc_node.add_opt("--start-time", node_seg[0])
-        check_exc_node.add_opt("--end-time", node_seg[1])
-        check_exc_file = check_exc_node.new_output_file_opt(node_seg, "txt", "--output-file")
-        wf.add_node(check_exc_node)
+        if len(node_frame_files):
+            check_exc_node = check_exc_exe.create_node()
+            check_exc_node.add_input_list_opt("--frame-files", node_frame_files)
+            check_exc_node.add_opt("--start-time", node_seg[0])
+            check_exc_node.add_opt("--end-time", node_seg[1])
+            check_exc_file = check_exc_node.new_output_file_opt(node_seg, "txt", "--output-file")
+            wf.add_node(check_exc_node)
 
-        # add output file to list of excitation files
-        check_exc_files.append(check_exc_file)
+            # add output file to list of excitation files
+            check_exc_files.append(check_exc_file)
 
 ##### check_bitmask
 
@@ -141,15 +142,16 @@ for subsection in wf.cp.get_subsections(exe_name):
         node_frame_files = [tmp_file for tmp_file in tmp_files if tmp_file.segment.intersects(node_seg)]
 
         # make a node in the workflow to check for excitations
-        check_bitmask_node = check_bitmask_exe.create_node()
-        check_bitmask_node.add_input_list_opt("--frame-files", node_frame_files)
-        check_bitmask_node.add_opt("--start-time", node_seg[0])
-        check_bitmask_node.add_opt("--end-time", node_seg[1])
-        check_bitmask_file = check_bitmask_node.new_output_file_opt(node_seg, "txt", "--output-file")
-        wf.add_node(check_bitmask_node)
+        if len(node_frame_files):
+            check_bitmask_node = check_bitmask_exe.create_node()
+            check_bitmask_node.add_input_list_opt("--frame-files", node_frame_files)
+            check_bitmask_node.add_opt("--start-time", node_seg[0])
+            check_bitmask_node.add_opt("--end-time", node_seg[1])
+            check_bitmask_file = check_bitmask_node.new_output_file_opt(node_seg, "txt", "--output-file")
+            wf.add_node(check_bitmask_node)
 
-        # add output file to list of bitmask files
-        check_bitmask_files.append(check_bitmask_file)
+            # add output file to list of bitmask files
+            check_bitmask_files.append(check_bitmask_file)
 
 ##### check_segdb
 
