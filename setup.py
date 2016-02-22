@@ -15,7 +15,7 @@ def find_package_data(dirname):
     return [os.path.relpath(path, dirname) for path in items]
 
 project_name = "pycbc-hwinj"
-project_version = "1.0.0"
+project_version = "1.0.dev1"
 project_url = "https://github.com/cmbiwer/pycbc-hwinjlog"
 project_description = "A python package for generating a workflow that cross-checks LIGO's various hardware injection logs."
 project_keywords = ["ligo", "physics"]
