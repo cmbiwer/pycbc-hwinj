@@ -7,16 +7,17 @@ CONFIG_FILE="${PWD}/config_main.ini ${PWD}/config_h1.ini ${PWD}/config_l1.ini"
 IFO1=H1
 IFO2=L1
 
-# analysis time for last week of O1
-#START_TIME=1136419217
-#END_TIME=$((START_TIME + 604800))
+# analysis time beginnig 1 September 2015
+WEEK_NUM=0
+START_TIME=$((1125100817 + ${WEEK_NUM}*604800))
+END_TIME=$((START_TIME + 604800))
 
 # analysis time for test hardware injection
-START_TIME=1128672300
-END_TIME=1128672700
+#START_TIME=1128672300
+#END_TIME=1128672700
 
 # workflow name
-WORKFLOW_NAME="hwinj_${START_TIME}_${END_TIME}"
+WORKFLOW_NAME="hwinj_${WEEK_NUM}_${START_TIME}_${END_TIME}"
 
 # schedule file
 #svn co https://daqsvn.ligo-la.caltech.edu/svn/injection/hwinj/Details/tinj/
@@ -37,7 +38,7 @@ pycbc_make_hwinj_workflow --name ${WORKFLOW_NAME} \
         workflow-ifos:${IFO1} \
         workflow-ifos:${IFO2} \
         workflow-schedule:schedule-path:${TINJ_SCHEDULE_PATH} \
-        workflow-results:results-dir:${RESULTS_DIR}
+        workflow-results:results-dir:${RESULTS_DIR} &> ${WORKFLOW_NAME}.txt
 
 # limit workflow to only 16 jobs
 export _CONDOR_DAGMAN_MAX_JOBS_SUBMITTED=16
