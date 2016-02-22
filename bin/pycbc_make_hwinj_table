@@ -6,6 +6,7 @@ import shutil
 from pycbc_hwinj import results
 from glue import segments
 from jinja2 import Environment, FileSystemLoader
+from pycbc_hwinj.io import read_entry
 from pycbc_hwinj.results.tables import table_row_keys, table_row_values
 from pycbc_hwinj.types import HardwareInjection
 
@@ -25,6 +26,8 @@ parser.add_argument("--html-template", type=str, default="templates/hwinj_table.
 parser.add_argument("--output-csv-file", type=str, required=True,
                     help="")
 parser.add_argument("--output-html-file", type=str, required=True,
+                    help="")
+parser.add_argument("--output-static-dir", type=str, required=True,
                     help="")
 parser.add_argument("--segment-file", type=str, required=True,
                     help="")
@@ -88,10 +91,11 @@ fp.close()
 for line in lines:
 
     # get segment from line
-    data = line.replace("\n", "").split(",")
-    channel_name = data[0]
+    line = line.rstrip("\n")
+    entry = read_entry(line)
+    channel_name = entry.channel_name
     ifo = channel_name.split(":")[0]
-    seg = segments.segment(float(data[1]), float(data[2]))
+    seg = entry.seg
     channel_flag = channel_name[3:]
 
     # create a HardwareInjection and append to the list
@@ -116,10 +120,11 @@ tmp_list = []
 for line in lines:
 
     # get segment from line
-    data = line.replace("\n", "").split(",")
-    segment_name = data[0]
+    line = line.rstrip("\n")
+    entry = read_entry(line)
+    segment_name = entry.channel_name
     ifo = segment_name.split(":")[0]
-    seg = segments.segment(float(data[1]), float(data[2]))
+    seg = entry.seg
     segment_flag = segment_name[3:]
 
     # check if corresponding HardwareInjection exists
@@ -166,11 +171,12 @@ tmp_list = []
 for line in lines:
 
     # get segment from line
-    data = line.replace("\n", "").split(",")
-    channel_name = data[0]
-    bitmask_name = data[1]
+    line = line.rstrip("\n")
+    entry = read_entry(line)
+    channel_name = entry.channel_name
     ifo = channel_name.split(":")[0]
-    seg = segments.segment(float(data[3]), float(data[4]))
+    seg = entry.seg
+    bitmask_name = entry.description
 
     # check if injection exists
     match_found = False
@@ -319,7 +325,6 @@ with open(opts.output_csv_file, "w") as fp:
     fp.write(csv_output)
 
 # copy statis files to html directory
-static_dir = results.__path__[0] + '/static'
-static_output_dir = os.path.dirname(opts.output_html_file) + '/static'
-if not os.path.exists(static_output_dir):
-    shutil.copytree(static_dir, static_output_dir)
+static_dir = results.__path__[0] + '/static/'
+if not os.path.exists(opts.output_static_dir):
+    shutil.copytree(static_dir, opts.output_static_dir)

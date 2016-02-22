@@ -4,6 +4,7 @@ import argparse
 import os
 from glue import segments
 from pycbc.workflow.segment import fromsegmentxml
+from pycbc_hwinj.io import DataEntry
 
 # command line usage
 parser = argparse.ArgumentParser(usage="pycbc_cat_segdb_data [--options]",
@@ -38,8 +39,8 @@ for segment_file in opts.segment_files:
 
     # write segments to file
     for seg in segs:
-        line = ",".join(map(str, [segment_name, seg[0], seg[1]])) + "\n"
-        fp.write(line)
+        entry = DataEntry(segment_name, seg)
+        fp.write(entry.write() + "\n")
 
 # close output file
 fp.close()

@@ -263,27 +263,6 @@ wf.add_node(cat_exc_node)
 
 # create an Executable for concatenating bitmask files
 exe_name = "cat_frame_data"
-tag = "EXC"
-cat_bitmask_exe = workflow.Executable(wf.cp, exe_name, ifos=wf.ifo_string, universe="vanilla",
-                                        out_dir=check_exc_dir, tags=[tag])
-
-# print statement
-logging.info("Creating %s workflow node", exe_name)
-
-# create a node
-cat_bitmask_node = cat_bitmask_exe.create_node()
-
-# add options
-cat_bitmask_node.add_input_list_opt("--input-files", check_bitmask_files)
-cat_bitmask_file = cat_bitmask_node.new_output_file_opt(wf.analysis_time, "txt", "--output-file")
-
-# add node to workflow
-wf.add_node(cat_bitmask_node)
-
-##### cat check_bitmask
-
-# create an Executable for concatenating bitmask files
-exe_name = "cat_frame_data"
 tag = "BITMASK"
 cat_bitmask_exe = workflow.Executable(wf.cp, exe_name, ifos=wf.ifo_string, universe="vanilla",
                                         out_dir=check_bitmask_dir, tags=[tag])
@@ -338,9 +317,11 @@ logging.info("Creating %s workflow node", exe_name)
 
 # this is not optimal since we assume where the parsed config
 # file will be but right now there is not a way around this
-path = run_dir + "/" + opts.name + "_parsed.ini"
+config_path = run_dir + "/" + opts.name + "_parsed.ini"
+path = results_dir + "/config.ini"
 config_file = workflow.File(ifos, "CONFIG", wf.analysis_time, file_url="file://localhost" + path)
 config_file.PFN(path, site="local")
+shutil.copy(config_path, path)
 
 # create a node
 make_table_node = make_table_exe.create_node()
@@ -356,6 +337,7 @@ make_table_node.add_opt("--start-time", wf.analysis_time[0])
 make_table_node.add_opt("--end-time", wf.analysis_time[1])
 make_table_html_file = make_table_node.new_output_file_opt(wf.analysis_time, "html", "--output-html-file")
 make_table_csv_file = make_table_node.new_output_file_opt(wf.analysis_time, "csv", "--output-csv-file")
+make_table_node.add_opt("--output-static-dir", results_dir+"/static/")
 
 # add node to workflow
 wf.add_node(make_table_node)
