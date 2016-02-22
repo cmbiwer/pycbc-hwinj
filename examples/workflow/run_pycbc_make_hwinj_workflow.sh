@@ -1,25 +1,35 @@
 #! /bin/bash
 
-WORKFLOW_NAME=test5
+# configuration files
 CONFIG_FILE="${PWD}/config_main.ini ${PWD}/config_h1.ini ${PWD}/config_l1.ini"
 
+# IFO to analyze
 IFO1=H1
 IFO2=L1
+
+# analysis time for last week of O1
 #START_TIME=1136419217
 #END_TIME=$((START_TIME + 604800))
+
+# analysis time for test hardware injection
 START_TIME=1128672300
 END_TIME=1128672700
 
+# workflow name
+WORKFLOW_NAME="hwinj_${START_TIME}_${END_TIME}"
+
+# schedule file
+#svn co https://daqsvn.ligo-la.caltech.edu/svn/injection/hwinj/Details/tinj/
 TINJ_SCHEDULE_PATH=${PWD}/tinj/schedule
 
+# path to final output directory
 RESULTS_DIR=${HOME}/public_html/hwinj_log/${WORKFLOW_NAME}
-
-#svn co https://daqsvn.ligo-la.caltech.edu/svn/injection/hwinj/Details/tinj/
 
 # change into run dir
 mkdir -p ${WORKFLOW_NAME}
 cd ${WORKFLOW_NAME}
 
+# run workflow generator
 pycbc_make_hwinj_workflow --name ${WORKFLOW_NAME} \
     --config-file ${CONFIG_FILE} \
     --config-overrides workflow:start-time:${START_TIME} \
