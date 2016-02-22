@@ -1,10 +1,10 @@
 #! /bin/bash
 
-WORKFLOW_NAME=test4
-CONFIG_FILE=${PWD}/config_h1.ini
+WORKFLOW_NAME=test5
+CONFIG_FILE="${PWD}/config_main.ini ${PWD}/config_h1.ini ${PWD}/config_l1.ini"
 
 IFO1=H1
-#IFO2=L1
+IFO2=L1
 #START_TIME=1136419217
 #END_TIME=$((START_TIME + 604800))
 START_TIME=1128672300
