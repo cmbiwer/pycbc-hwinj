@@ -74,6 +74,8 @@ segs.contract(opts.pad_seconds)
 # write segments to file
 with open(opts.output_file, "w") as fp:
     for seg in segs:
-        entry = DataEntry(opts.channel_name, seg, description=opts.bitmask_name,
+        seglist = segments.segmentlist([seg])
+        entry = DataEntry(opts.channel_name, seglist,
+                          description=opts.bitmask_name,
                           bitmask=opts.bitmask)
         fp.write(entry.write() + "\n")
