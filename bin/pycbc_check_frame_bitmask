@@ -34,7 +34,7 @@ parser.add_argument("--output-file", type=str, required=True,
                     help="Output file with segments.")
 parser.add_argument("--flip-bits", action="store_true",
                     help="Takes 1 minus the value of the channel.")
-parser.add_argument("--pad-seconds", type=float, default=0.1,
+parser.add_argument("--pad-seconds", type=float, default=0.0,
                     help="Seconds to pad segments when finding union.")
 
 # parse command line

@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 import argparse
+from glue import segments
 from pycbc_hwinj.io import read_entry
 
 # command line usage
@@ -12,12 +13,14 @@ parser.add_argument("--input-files", type=str, nargs="+", required=True,
                     help="Input CSV files to read.")
 parser.add_argument("--output-file", type=str, required=True,
                     help="Output file to write.")
+parser.add_argument("--pad-seconds", type=float, default=0.0,
+                    help="Seconds to protract and the contract segmentlist.")
 
 # parse command line
 opts = parser.parse_args()
 
-# create a list to hold all entries
-entries = []
+# create a dict to hold all entries
+entries_dict = {}
 
 # loop over input files
 for path in opts.input_files:
@@ -30,14 +33,26 @@ for path in opts.input_files:
     # loop over lines
     for line in lines:
 
-       # add entry to list
+       # read line
        if len(line):
            line = line.rstrip("\n")
            entry = read_entry(line)
-           entries.append(entry)
+
+           # add entry to dict
+           if entry.channel_name not in entries_dict.keys():
+               entries_dict[entry.channel_name] = entry
+           else:
+               entries_dict[entry.channel_name].segmentlist += entry.segmentlist
+
+# set couple sample points protacting than contracting in seconds
+# while the segmentlist is coalesce
+for key in entries_dict.keys():
+    entries_dict[key].segmentlist.protract(opts.pad_seconds)
+    entries_dict[key].segmentlist.coalesce()
+    entries_dict[key].segmentlist.contract(opts.pad_seconds)
 
 # write output file
 fp = open(opts.output_file, "w")
-for entry in entries:
-    fp.write(entry.write() + "\n")
+for key in entries_dict.keys():
+    fp.write(entries_dict[key].write() + "\n")
 fp.close()
