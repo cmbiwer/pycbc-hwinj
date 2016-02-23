@@ -41,7 +41,7 @@ parser.add_argument("--schedule-file", type=str, required=True,
                     help="")
 parser.add_argument("--config-file", type=str, required=True,
                     help="")
-parser.add_argument("--observation-segment-flag", type=str, default="DMT-ANALYSIS_READY:1",
+parser.add_argument("--exclude-coinc-flag", nargs="+", type=str, default=["DMT-ANALYSIS_READY:1"],
                     help="")
 
 # parse command line
@@ -95,7 +95,7 @@ for line in lines:
     entry = read_entry(line)
     channel_name = entry.channel_name
     ifo = channel_name.split(":")[0]
-    seg = entry.seg
+    seg = entry.segmentlist[0]
     channel_flag = channel_name[3:]
 
     # create a HardwareInjection and append to the list
@@ -124,7 +124,7 @@ for line in lines:
     entry = read_entry(line)
     segment_name = entry.channel_name
     ifo = segment_name.split(":")[0]
-    seg = entry.seg
+    seg = entry.segmentlist[0]
     segment_flag = segment_name[3:]
 
     # check if corresponding HardwareInjection exists
@@ -147,7 +147,7 @@ for line in lines:
 #                break
 
     # if there was no corresponding HardwareInjection then make one 
-    if not match_found and seg in analysis_time and segment_flag != opts.observation_segment_flag:
+    if not match_found and seg in analysis_time and segment_flag not in opts.exclude_coinc_flag:
         tmp_hwinj = HardwareInjection(ifo)
         tmp_hwinj.seg_dict[segment_flag] = segments.segmentlist([seg])
         tmp_list.append(tmp_hwinj)
@@ -175,7 +175,7 @@ for line in lines:
     entry = read_entry(line)
     channel_name = entry.channel_name
     ifo = channel_name.split(":")[0]
-    seg = entry.seg
+    seg = entry.segmentlist[0]
     bitmask_name = entry.description
 
     # check if injection exists

@@ -39,7 +39,8 @@ for segment_file in opts.segment_files:
 
     # write segments to file
     for seg in segs:
-        entry = DataEntry(segment_name, seg)
+        seglist = segments.segmentlist([seg])
+        entry = DataEntry(segment_name, seglist)
         fp.write(entry.write() + "\n")
 
 # close output file
