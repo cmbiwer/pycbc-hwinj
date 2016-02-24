@@ -143,9 +143,6 @@ for line in lines:
                 hwinj.seg_dict[segment_flag].append(seg)
             match_found = True
 
-#            if segment_flag != opts.observation_segment_flag:
-#                break
-
     # if there was no corresponding HardwareInjection then make one 
     if not match_found and seg in analysis_time and segment_flag not in opts.exclude_coinc_flags:
         tmp_hwinj = HardwareInjection(ifo)
@@ -192,7 +189,7 @@ for line in lines:
             else:
                 hwinj.bitmask_dict[bitmask_name].append(seg)
             match_found = True
-            break
+#            break
 
     # if there was no corresponding HardwareInjection then make one 
     if not match_found and seg in analysis_time and bitmask_name not in opts.exclude_coinc_flags:

@@ -8,7 +8,7 @@ IFO1=H1
 IFO2=L1
 
 # analysis time beginnig 1 September 2015
-WEEK_NUM=0
+WEEK_NUM=1
 START_TIME=$((1125100817 + ${WEEK_NUM}*604800))
 END_TIME=$((START_TIME + 604800))
 
