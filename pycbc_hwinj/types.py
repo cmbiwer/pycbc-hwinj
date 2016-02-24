@@ -73,10 +73,10 @@ class HardwareInjection(object):
         """ Logical check that there was only one excitation at the time.
         """
 
-        if len(self.exc_dict.keys()) > 1:
+        if len(self.exc_dict.keys()) != 1:
             return False
         for key in self.exc_dict.keys():
-            if len(self.exc_dict[key]) > 1:
+            if len(self.exc_dict[key]) != 1:
                 return False
         return True
 
