@@ -57,5 +57,6 @@ for k, g in groupby(enumerate(exc_idx), lambda (i,x):i-x):
 # write segments to file
 with open(opts.output_file, "w") as fp:
     for seg in segs:
-        entry = DataEntry(opts.channel_name, seg)
+        seglist = segments.segmentlist([seg])
+        entry = DataEntry(opts.channel_name, seglist)
         fp.write(entry.write() + "\n")

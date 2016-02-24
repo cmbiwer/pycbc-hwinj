@@ -41,7 +41,7 @@ parser.add_argument("--schedule-file", type=str, required=True,
                     help="")
 parser.add_argument("--config-file", type=str, required=True,
                     help="")
-parser.add_argument("--exclude-coinc-flag", nargs="+", type=str, default=["DMT-ANALYSIS_READY:1"],
+parser.add_argument("--exclude-coinc-flags", nargs="+", type=str, default=["DMT-ANALYSIS_READY:1"],
                     help="")
 
 # parse command line
@@ -130,7 +130,7 @@ for line in lines:
     # check if corresponding HardwareInjection exists
     match_found = False
     for hwinj in hwinj_list:
-        if hwinj.ifo == ifo and hwinj.inj_seg.intersects_segment(seg):
+        if hwinj.ifo == ifo and hwinj.inj_seg(opts.exclude_coinc_flags).intersects_segment(seg):
 
             if segment_flag not in hwinj.seg_dict.keys():
                 hwinj.seg_dict[segment_flag] = segments.segmentlist([seg])
@@ -147,7 +147,7 @@ for line in lines:
 #                break
 
     # if there was no corresponding HardwareInjection then make one 
-    if not match_found and seg in analysis_time and segment_flag not in opts.exclude_coinc_flag:
+    if not match_found and seg in analysis_time and segment_flag not in opts.exclude_coinc_flags:
         tmp_hwinj = HardwareInjection(ifo)
         tmp_hwinj.seg_dict[segment_flag] = segments.segmentlist([seg])
         tmp_list.append(tmp_hwinj)
@@ -181,7 +181,7 @@ for line in lines:
     # check if injection exists
     match_found = False
     for hwinj in hwinj_list:
-        if hwinj.ifo == ifo and hwinj.inj_seg.intersects_segment(seg):
+        if hwinj.ifo == ifo and hwinj.inj_seg(opts.exclude_coinc_flags).intersects_segment(seg):
             if bitmask_name not in hwinj.seg_dict.keys():
                 hwinj.bitmask_dict[bitmask_name] = segments.segmentlist([seg])
 
@@ -195,7 +195,7 @@ for line in lines:
             break
 
     # if there was no corresponding HardwareInjection then make one 
-    if not match_found and seg in analysis_time:
+    if not match_found and seg in analysis_time and bitmask_name not in opts.exclude_coinc_flags:
         hwinj = HardwareInjection(ifo)
         hwinj.bitmask_dict[bitmask_name] = segments.segmentlist([seg])
         tmp_list.append(hwinj)
@@ -222,7 +222,7 @@ for entry in schedule:
     # check if schedule
     match_found = False
     for hwinj in hwinj_list:
-        if float(entry[0]) in hwinj.inj_seg.protract(600):
+        if float(entry[0]) in hwinj.inj_seg(opts.exclude_coinc_flags).protract(600):
             hwinj.schedule_time = int(entry[0])
             hwinj.schedule_type = int(entry[1])
             hwinj.schedule_scale_factor = float(entry[2])
@@ -256,9 +256,9 @@ for trig in gracedb_trigs:
     # check if gracedb trigger
     match_found = None
     for hwinj in hwinj_list:
-        if hwinj.inj_seg:
+        if hwinj.inj_seg(opts.exclude_coinc_flags):
             if trig[2] == "HardwareInjection" \
-               and float(trig[1]) in hwinj.inj_seg.protract(600):
+               and float(trig[1]) in hwinj.inj_seg(opts.exclude_coinc_flags).protract(600):
                 hwinj.gracedb_id.append(trig[0])
                 hwinj.gracedb_time.append(float(trig[1]))
                 match_found = True

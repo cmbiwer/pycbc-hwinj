@@ -41,24 +41,24 @@ class HardwareInjection(object):
         return " ".join(map(str, [self.schedule_time, self.schedule_type,
                                   self.schedule_scale_factor, self.schedule_prefix]))
 
-    @property
-    def inj_seg(self, observation_segment_flag="DMT-ANALYSIS_READY:1"):
+    def inj_seg(self, exclude_coinc_flags=None):
         """ Returns a segmnetlist that is the union of all excitation,
         segdb and bitmasked channels.
         """
 
+        if exclude_coinc_flags is None:
+            exclude_coinc_flags = []
+
         tmp_list = segments.segmentlist([])
-        tmp_list
-        for seg_list in self.exc_dict.values():
-            tmp_list.extend(seg_list)
-            tmp_list
+        for key in self.exc_dict.keys():
+            if key not in exclude_coinc_flags:
+                tmp_list.extend(self.exc_dict[key])
         for key in self.seg_dict.keys():
-            if key != observation_segment_flag:
+            if key not in exclude_coinc_flags:
                 tmp_list.extend(self.seg_dict[key])
-                tmp_list
-        for seg_list in self.bitmask_dict.values():
-            tmp_list.extend(seg_list)
-            tmp_list
+        for key in self.bitmask_dict.keys():
+            if key not in exclude_coinc_flags:
+                tmp_list.extend(self.bitmask_dict[key])
         if self.schedule_time:
             seg = segments.segment(self.schedule_time, self.schedule_time + 1)
             seg_list = segments.segmentlist([seg])
