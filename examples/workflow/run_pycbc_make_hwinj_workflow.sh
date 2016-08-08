@@ -8,7 +8,7 @@ IFO1=H1
 IFO2=L1
 
 # analysis time beginnig 1 September 2015
-WEEK_NUM=1
+WEEK_NUM=3
 START_TIME=$((1125100817 + ${WEEK_NUM}*604800))
 END_TIME=$((START_TIME + 604800))
 
@@ -44,5 +44,6 @@ pycbc_make_hwinj_workflow --name ${WORKFLOW_NAME} \
 export _CONDOR_DAGMAN_MAX_JOBS_SUBMITTED=16
 
 # plan and submit the workflow
-cd ${WORKFLOW_NAME}
-pycbc_submit_dax --accounting-group ligo.dev.o1.detchar.explore.test --dax ${WORKFLOW_NAME}.dax
+pycbc_submit_dax --no-create-proxy \
+    --accounting-group ligo.dev.o1.detchar.explore.test \
+    --dax ${WORKFLOW_NAME}.dax
