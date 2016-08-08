@@ -11,7 +11,7 @@ import Pegasus.DAX3 as dax
 from glue import segments
 from pycbc_hwinj.frame import get_frame_files
 from pycbc import workflow
-from pycbc.workflow.core import make_external_call, OutSegFile
+from pycbc.workflow.core import make_external_call, SegFile
 
 ##### setup
 
@@ -191,9 +191,8 @@ for subsection in wf.cp.get_subsections(exe_name):
     # new segment database API should fix this
     seg_url  = urlparse.urlunparse(["file", "localhost", output_path,
                                    None, None, None])
-    seg_file = OutSegFile(ifo, "CHECK_SEGDB",
-                          wf.analysis_time, seg_url, segment_list=[],
-                                  tags=[subsection])
+    seg_file = workflow.File([ifo], "CHECK_SEGDB", wf.analysis_time,
+                            file_url=seg_url, tags=[subsection])
     seg_file.PFN(output_path, site="local")
     check_segdb_files.append(seg_file)
 
@@ -239,6 +238,10 @@ if os.path.exists(schedule_path):
     schedule_file = workflow.File(ifos, "SCHEDULE", wf.analysis_time, file_url="file://localhost" + path)
     schedule_file.PFN(path, site="local")
     shutil.copy(schedule_path, path)
+
+# else print a warning
+else:
+    logging.warn("Could not find schedule path: %s", schedule_path)
 
 ##### cat check_exc
 
