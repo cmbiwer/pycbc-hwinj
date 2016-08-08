@@ -44,6 +44,7 @@ pycbc_make_hwinj_workflow --name ${WORKFLOW_NAME} \
 export _CONDOR_DAGMAN_MAX_JOBS_SUBMITTED=16
 
 # plan and submit the workflow
+cd ${WORKFLOW_NAME}
 pycbc_submit_dax --no-create-proxy \
     --accounting-group ligo.dev.o1.detchar.explore.test \
     --dax ${WORKFLOW_NAME}.dax
