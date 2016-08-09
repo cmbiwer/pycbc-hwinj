@@ -1,13 +1,12 @@
 #! /bin/bash
 
+# IFO to analyze (eg. "H1" or "L1")
+IFO=$1
+
 # configuration files
-CONFIG_FILE="${PWD}/config_main.ini ${PWD}/config_h1.ini ${PWD}/config_l1.ini"
+CONFIG_FILE="${PWD}/config_main.ini ${PWD}/config_${IFO,,}.ini"
 
-# IFO to analyze
-IFO1=H1
-IFO2=L1
-
-# analysis time beginnig 1 September 2015
+# analysis time from reference time equal to 1 September 2015
 WEEK_NUM=3
 START_TIME=$((1125100817 + ${WEEK_NUM}*604800))
 END_TIME=$((START_TIME + 604800))
@@ -35,13 +34,15 @@ pycbc_make_hwinj_workflow --name ${WORKFLOW_NAME} \
     --config-file ${CONFIG_FILE} \
     --config-overrides workflow:start-time:${START_TIME} \
         workflow:end-time:${END_TIME} \
-        workflow-ifos:${IFO1} \
-        workflow-ifos:${IFO2} \
+        workflow-ifos:${IFO} \
         workflow-schedule:schedule-path:${TINJ_SCHEDULE_PATH} \
         workflow-results:results-dir:${RESULTS_DIR} &> ${WORKFLOW_NAME}.txt
 
 # limit workflow to only 16 jobs
 export _CONDOR_DAGMAN_MAX_JOBS_SUBMITTED=16
+
+# get rid of grid proxy because it lives in /tmp/ and nodes cannot see that
+unset X509_USER_PROXY
 
 # plan and submit the workflow
 cd ${WORKFLOW_NAME}
