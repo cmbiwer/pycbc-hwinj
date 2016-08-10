@@ -10,6 +10,11 @@ from pycbc_hwinj.io import read_entry
 from pycbc_hwinj.results.tables import table_row_keys, table_row_values
 from pycbc_hwinj.types import HardwareInjection
 
+PROTRACT_SEC = 300
+
+def split_str(s, n):
+    return [ s[i:i+n] for i in xrange(0, len(s), n) ]
+
 # command line usage
 parser = argparse.ArgumentParser(usage="pycbc_make_cal_workflow [--options]",
                                  description="Workflow generator for adjusting calibration model.")
@@ -189,7 +194,6 @@ for line in lines:
             else:
                 hwinj.bitmask_dict[bitmask_name].append(seg)
             match_found = True
-#            break
 
     # if there was no corresponding HardwareInjection then make one 
     if not match_found and seg in analysis_time and bitmask_name not in opts.exclude_coinc_flags:
@@ -219,7 +223,7 @@ for entry in schedule:
     # check if schedule
     match_found = False
     for hwinj in hwinj_list:
-        if float(entry[0]) in hwinj.inj_seg(opts.exclude_coinc_flags).protract(600):
+        if float(entry[0]) in hwinj.inj_seg(opts.exclude_coinc_flags).protract(PROTRACT_SEC):
             hwinj.schedule_time = int(entry[0])
             hwinj.schedule_type = int(entry[1])
             hwinj.schedule_scale_factor = float(entry[2])
@@ -241,7 +245,6 @@ hwinj_list = hwinj_list + tmp_list
 ##### check_gracedb
 
 # read gracedb triggers
-gracedb_trigs = []
 fp = open(opts.gracedb_file, "r")
 lines = fp.readlines()
 gracedb_trigs = [line.replace("\n", "").split(",") for line in lines]
@@ -249,20 +252,22 @@ gracedb_trigs = [line.replace("\n", "").split(",") for line in lines]
 # loop over gracedb triggers
 tmp_list = []
 for trig in gracedb_trigs:
+    ifo_list = split_str(trig[3], 2)
 
     # check if gracedb trigger
-    match_found = None
+    match_found = False
     for hwinj in hwinj_list:
-        if hwinj.inj_seg(opts.exclude_coinc_flags):
-            if trig[2] == "HardwareInjection" \
-               and float(trig[1]) in hwinj.inj_seg(opts.exclude_coinc_flags).protract(600):
-                hwinj.gracedb_id.append(trig[0])
-                hwinj.gracedb_time.append(float(trig[1]))
-                match_found = True
+        if trig[2] == "HardwareInjection" \
+           and float(trig[1]) in hwinj.inj_seg(opts.exclude_coinc_flags).protract(PROTRACT_SEC) \
+           and hwinj.ifo in ifo_list:
+            hwinj.gracedb_id.append(trig[0])
+            hwinj.gracedb_time.append(float(trig[1]))
+            match_found = True
 
     # if there was no corresponding HardwareInjection then make one 
     if not match_found and trig[0].startswith("H") and float(trig[1]) in analysis_time:
         hwinj = HardwareInjection("None")
+        hwinj.ifo = "".join(ifo_list)
         hwinj.gracedb_id.append(trig[0])
         hwinj.gracedb_time.append(float(trig[1]))
         tmp_list.append(hwinj)
