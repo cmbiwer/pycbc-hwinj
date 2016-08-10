@@ -1,19 +1,20 @@
 #! /bin/bash
 
 # options for filenames
-GPS_START_TIME=1125705617
-GPS_END_TIME=1126310417
-NUM=1
+NUM=3
+GPS_START_TIME=1126915217
+GPS_END_TIME=1127520017
 
 # name of workflow
 WORKFLOW_NAME=hwinj_${NUM}_${GPS_START_TIME}_${GPS_END_TIME}
 
 # directories
 RUN_DIR=${WORKFLOW_NAME}/${WORKFLOW_NAME}
-HTML_DIR=${HOME}/public_html/hwinj_log/${WORKFLOW_NAME}
+HTML_DIR=${HOME}/public_html/hwinj_log/o1/${WORKFLOW_NAME}
 
 # make HTML table
-pycbc_make_hwinj_table --start-time ${GPS_START_TIME} --end-time ${GPS_END_TIME} \
+mkdir -p ${HTML_DIR}
+python ../../bin/pycbc_make_hwinj_table --start-time ${GPS_START_TIME} --end-time ${GPS_END_TIME} \
     --excitation-file  ${RUN_DIR}/check_exc/H1L1-CAT_FRAME_DATA_EXC-${GPS_START_TIME}-604800.txt \
     --bitmask-file  ${RUN_DIR}/check_bitmask/H1L1-CAT_FRAME_DATA_BITMASK-${GPS_START_TIME}-604800.txt \
     --gracedb-file  ${RUN_DIR}/check_gracedb/H1L1-GRACEDB-${GPS_START_TIME}-604800.txt \
