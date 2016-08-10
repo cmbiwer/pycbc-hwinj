@@ -39,10 +39,10 @@ for path in opts.input_files:
            entry = read_entry(line)
 
            # add entry to dict
-           if entry.channel_name not in entries_dict.keys():
-               entries_dict[entry.channel_name] = entry
+           if entry.description not in entries_dict.keys():
+               entries_dict[entry.description] = entry
            else:
-               entries_dict[entry.channel_name].segmentlist += entry.segmentlist
+               entries_dict[entry.description].segmentlist += entry.segmentlist
 
 # set couple sample points protacting than contracting in seconds
 # while the segmentlist is coalesce
