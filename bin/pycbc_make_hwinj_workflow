@@ -314,8 +314,9 @@ if not os.path.exists(results_dir):
 
 # create an Executable for creating the html table
 exe_name = "make_table"
-make_table_exe = workflow.Executable(wf.cp, exe_name, ifos=wf.ifo_string, universe="local",
-                                        out_dir=results_dir, tags=[])
+make_table_exe = workflow.Executable(wf.cp, exe_name, ifos=wf.ifo_string,
+                                    universe="local",
+                                    out_dir=results_dir, tags=[])
 
 # print statement
 logging.info("Creating %s workflow node", exe_name)
