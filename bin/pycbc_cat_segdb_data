@@ -3,7 +3,7 @@
 import argparse
 import os
 from glue import segments
-from pycbc.workflow.segment import fromsegmentxml
+from pycbc_hwinj.segment import fromsegmentxml
 from pycbc_hwinj.io import DataEntry
 
 # command line usage
