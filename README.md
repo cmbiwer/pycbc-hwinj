@@ -1,6 +1,6 @@
 # pycbc-hwinj
 
-This is a package for building a high-throughput computing workflow that cross checks the different logs for LIGO hardware injections. It uses Pegasus (via the PyCBC workflow tools) to create a workflow.
+This is a package for building a high-throughput computing workflow that cross checks the different logs for LIGO hardware injections. It uses Pegasus (via the PyCBC workflow tools) to create and run a workflow.
 
 This workflow has the ability to check the following sources with hardware injection timing data:
   * Channels in the raw frames (eg. the excitation channels)
@@ -16,7 +16,7 @@ Depends on PyCBC (http://github.com/ligo-cbc/pycbc).
 
 ## workflow
 
-The workflow generator is ``pycbc_make_hwinj_workflow``. The workflow generator takes a configuration file that states what logging sources to check.
+The workflow generator is ``pycbc_make_hwinj_workflow``. The workflow generator takes a configuration file that states what logging sources to check. The workflow generator will check the segment database and GraceDB queries.
 
 A few generic executables in the workflow:
   * ``pycbc_check_frame_bitmask`` applies a bitmask to a channel and returns contiguous segments.
