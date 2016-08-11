@@ -26,6 +26,8 @@ A few generic executables in the workflow:
 
 The HTML summary pages are created with ``pycbc_make_hwinj_table``.
 
+![hardware injection workflow](https://github.com/cmbiwer/pycbc-hwinj/blob/master/docs/static/hwinj_workflow.png "Hardware Injection Workflow")
+
 ## how to run example
 
 To run the example change into the example directory:
