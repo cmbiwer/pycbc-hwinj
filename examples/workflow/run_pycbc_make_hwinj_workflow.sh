@@ -1,15 +1,9 @@
 #! /bin/bash
 
-# IFO to analyze (eg. "H1" or "L1")
-#IFO=$1
-
-# configuration files
-#CONFIG_FILE="${PWD}/config_main.ini ${PWD}/config_${IFO,,}.ini"
-
 CONFIG_FILE="${PWD}/config_main.ini ${PWD}/config_h1.ini ${PWD}/config_l1.ini"
 
 # analysis time from reference time equal to 1 September 2015
-WEEK_NUM=1
+WEEK_NUM=$1
 START_TIME=$((1125100817 + ${WEEK_NUM}*604800))
 END_TIME=$((START_TIME + 604800))
 
