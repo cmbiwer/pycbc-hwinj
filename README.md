@@ -22,7 +22,7 @@ A few generic executables in the workflow:
   * ``pycbc_check_frame_bitmask`` applies a bitmask to a channel and returns contiguous segments.
   * ``pycbc_check_frame_excitation`` checks for contiguous segments of non-zero values in a channel.
   * ``pycbc_cat_frame_data`` concatenates output files from the two executables above.
-  * ``pycbc_cate_segdb_data`` concatenates LIGOLW XML files returned from the segment database.
+  * ``pycbc_cat_segdb_data`` concatenates LIGOLW XML files returned from the segment database.
 
 The HTML summary pages are created with ``pycbc_make_hwinj_table``.
 
