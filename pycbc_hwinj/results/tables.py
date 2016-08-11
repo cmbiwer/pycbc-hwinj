@@ -1,10 +1,14 @@
+""" Module that contains functions for organzing the creation of columns and
+row values in output tables.
+"""
 
 def table_row_keys(exc_keys, seg_keys, bitmask_keys, check_keys):
     """ Returns a list of column labels.
     """
 
     # first few columns are predefined
-    cols = ["IFO", "GraceDB IDs", "GraceDB Times", "Schedule", "All checks passed"]
+    cols = ["IFO", "GraceDB IDs", "GraceDB Times", "Schedule",
+           "All checks passed"]
 
     # add checks keys
     for key in check_keys:

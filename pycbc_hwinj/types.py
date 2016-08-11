@@ -1,3 +1,6 @@
+""" Module that contains the class for organzing hardware injections.
+"""
+
 from glue import segments
 
 class HardwareInjection(object):

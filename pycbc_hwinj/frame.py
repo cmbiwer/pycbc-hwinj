@@ -1,3 +1,6 @@
+""" Module that contains functions to handle LIGO frame files.
+"""
+
 import os
 from glue import segments
 from pycbc.frame import datafind_connection

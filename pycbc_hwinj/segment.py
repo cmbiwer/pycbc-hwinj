@@ -1,3 +1,8 @@
+""" Module that contains functions that were deprecated for handling segments.
+They persist here because someone needs to update the tools to use the newer
+classes implemented in PyCBC.
+"""
+
 import lal
 from glue import segments
 from glue.ligolw import utils, table, lsctables, ligolw

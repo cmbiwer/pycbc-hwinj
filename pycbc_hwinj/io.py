@@ -1,3 +1,7 @@
+""" Module that contains classes and functions for handling the I/O for
+the output of the workflow executables that check frame data.
+"""
+
 from glue import segments
 
 class DataEntry(object):
