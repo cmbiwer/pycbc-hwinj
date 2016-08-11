@@ -1,12 +1,13 @@
 #! /bin/bash
 
-# options for filenames
-NUM=3
-GPS_START_TIME=1126915217
-GPS_END_TIME=1127520017
+# week number
+NUM=${1}
 
 # name of workflow
-WORKFLOW_NAME=hwinj_${NUM}_${GPS_START_TIME}_${GPS_END_TIME}
+# use naming convention to find workflow name from only week number
+WORKFLOW_NAME=`ls -d hwinj_${NUM}_*`
+GPS_START_TIME=${WORKFLOW_NAME:8:10}
+GPS_END_TIME=${WORKFLOW_NAME:19:10}
 
 # directories
 RUN_DIR=${WORKFLOW_NAME}/${WORKFLOW_NAME}
