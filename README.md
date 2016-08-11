@@ -8,7 +8,7 @@ This workflow has the ability to check the following sources with hardware injec
   * ODC channels in the raw frames (eg. the hardware injection ODC channel)
   * Low-latency state vector that is downstream from ODC
   * Segment database that is downstream from ODC
-  * Gravitational-wave Event Database (GraceDB)
+  * Gravitational-Wave Candidate Event Database (GraceDB)
 
 ## dependencies
 
