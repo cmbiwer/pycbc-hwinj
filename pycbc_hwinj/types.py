@@ -4,7 +4,7 @@
 from glue import segments
 
 class HardwareInjection(object):
-    """ Class that represents a hardware injection.
+    """ Class that represents a hardware injection from a single IFO.
     """
 
     def __init__(self, ifo):
@@ -45,7 +45,7 @@ class HardwareInjection(object):
                                   self.schedule_scale_factor, self.schedule_prefix]))
 
     def inj_seg(self, exclude_coinc_flags=None):
-        """ Returns a segmnetlist that is the union of all excitation,
+E       """ Returns a segmentlist that is the union of all excitation,
         segdb and bitmasked channels.
         """
 
