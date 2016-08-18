@@ -40,6 +40,12 @@ Checkout the SVN repository that contains the transient injeciton schedule file 
 svn co https://daqsvn.ligo-la.caltech.edu/svn/injection/hwinj/Details/tinj/
 ```
 
+Create a credential to remotely access the segment database when you run the workflow generator with:
+```
+ligo-proxy-init albert.einstein
+```
+Where ``albert.einstein`` is your LIGO.ORG username.
+
 There is a script, ``run_pycbc_make_hwinj_workflow.sh``, that is setup to run the workflow beginning the week of September 1, 2015. It takes one argument that is the number of the week since September 1, 2015. For example to run on the third week since September 1, 2015, do:
 ```
 sh run_pycbc_make_hwinj_workflow.sh 3
