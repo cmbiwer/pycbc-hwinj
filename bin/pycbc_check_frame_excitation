@@ -35,6 +35,7 @@ try:
     data = read_frame(opts.frame_files, opts.channel_name, opts.start_time, opts.end_time)
 except RuntimeError:
     fp = open(opts.output_file, "w")
+    fp.write("RUNTIME ERROR,%d,%d"%(opts.start_time, opts.end_time))
     fp.close()
     sys.exit()
 

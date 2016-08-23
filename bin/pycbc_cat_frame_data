@@ -33,6 +33,10 @@ for path in opts.input_files:
     # loop over lines
     for line in lines:
 
+       # skip error lines
+       if line.startswith("RUNTIME ERROR"):
+           continue
+
        # read line
        if len(line):
            line = line.rstrip("\n")
