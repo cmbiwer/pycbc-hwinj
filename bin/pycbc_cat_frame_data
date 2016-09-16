@@ -2,7 +2,7 @@
 
 import argparse
 from glue import segments
-from pycbc_hwinj.io import read_entry
+from pycbc_hwinj.io import DataEntry
 
 # command line usage
 parser = argparse.ArgumentParser(usage="pycbc_cat_frame_data [--options]",
@@ -40,7 +40,7 @@ for path in opts.input_files:
        # read line
        if len(line):
            line = line.rstrip("\n")
-           entry = read_entry(line)
+           entry = DataEntry.read_entry(line)
 
            # add entry to dict
            if entry.description not in entries_dict.keys():

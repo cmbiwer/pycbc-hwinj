@@ -6,7 +6,7 @@ import shutil
 from pycbc_hwinj import results
 from glue import segments
 from jinja2 import Environment, FileSystemLoader
-from pycbc_hwinj.io import read_entry
+from pycbc_hwinj.io import DataEntry
 from pycbc_hwinj.results.tables import table_row_keys, table_row_values
 from pycbc_hwinj.types import HardwareInjection
 
@@ -97,7 +97,7 @@ for line in lines:
 
     # get segment from line
     line = line.rstrip("\n")
-    entry = read_entry(line)
+    entry = DataEntry.read_entry(line)
     channel_name = entry.channel_name
     ifo = channel_name.split(":")[0]
     seg = entry.segmentlist[0]
@@ -126,7 +126,7 @@ for line in lines:
 
     # get segment from line
     line = line.rstrip("\n")
-    entry = read_entry(line)
+    entry = DataEntry.read_entry(line)
     segment_name = entry.channel_name
     ifo = segment_name.split(":")[0]
     seg = entry.segmentlist[0]
@@ -174,7 +174,7 @@ for line in lines:
 
     # get segment from line
     line = line.rstrip("\n")
-    entry = read_entry(line)
+    entry = DataEntry.read_entry(line)
     channel_name = entry.channel_name
     ifo = channel_name.split(":")[0]
     seg = entry.segmentlist[0]

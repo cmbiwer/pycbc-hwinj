@@ -24,16 +24,17 @@ class DataEntry(object):
 
         return "\n".join(lines)
 
-def read_entry(line, delimiter=","):
-    data = line.split(delimiter)
-    i = 0
-    channel_name = data[i]; i += 1
-    seg = segments.segment(float(data[i]), float(data[i+1])); i += 2
-    seglist = segments.segmentlist([])
-    seglist.append(seg)
-    description = data[i]; i += 1
-    bitmask = data[i]; i += 1
-    return DataEntry(channel_name, seglist, description=description,
+    @classmethod
+    def read_entry(cls, line, delimiter=","):
+        data = line.split(delimiter)
+        i = 0
+        channel_name = data[i]; i += 1
+        seg = segments.segment(float(data[i]), float(data[i+1])); i += 2
+        seglist = segments.segmentlist([])
+        seglist.append(seg)
+        description = data[i]; i += 1
+        bitmask = data[i]; i += 1
+        return cls(channel_name, seglist, description=description,
                            bitmask=bitmask)
 
 
