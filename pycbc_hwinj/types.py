@@ -54,13 +54,14 @@ class HardwareInjection(object):
 
         tmp_list = segments.segmentlist([])
         for key in self.exc_dict.keys():
-            if self.ifo+":"+key not in exclude_coinc_flags:
+            if key[3:] not in exclude_coinc_flags:
                 tmp_list.extend(self.exc_dict[key])
         for key in self.seg_dict.keys():
-            if self.ifo+":"+key not in exclude_coinc_flags:
+            if key[3:] not in exclude_coinc_flags:
                 tmp_list.extend(self.seg_dict[key])
         for key in self.bitmask_dict.keys():
-            if self.ifo+":"+key not in exclude_coinc_flags:
+            if key[3:] not in exclude_coinc_flags:
+                print key
                 tmp_list.extend(self.bitmask_dict[key])
         if self.schedule_time:
             seg = segments.segment(self.schedule_time, self.schedule_time + 1)
