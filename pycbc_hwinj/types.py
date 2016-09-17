@@ -45,7 +45,7 @@ class HardwareInjection(object):
                                   self.schedule_scale_factor, self.schedule_prefix]))
 
     def inj_seg(self, exclude_coinc_flags=None):
-E       """ Returns a segmentlist that is the union of all excitation,
+        """ Returns a segmentlist that is the union of all excitation,
         segdb and bitmasked channels.
         """
 
@@ -54,13 +54,13 @@ E       """ Returns a segmentlist that is the union of all excitation,
 
         tmp_list = segments.segmentlist([])
         for key in self.exc_dict.keys():
-            if key not in exclude_coinc_flags:
+            if self.ifo+":"+key not in exclude_coinc_flags:
                 tmp_list.extend(self.exc_dict[key])
         for key in self.seg_dict.keys():
-            if key not in exclude_coinc_flags:
+            if self.ifo+":"+key not in exclude_coinc_flags:
                 tmp_list.extend(self.seg_dict[key])
         for key in self.bitmask_dict.keys():
-            if key not in exclude_coinc_flags:
+            if self.ifo+":"+key not in exclude_coinc_flags:
                 tmp_list.extend(self.bitmask_dict[key])
         if self.schedule_time:
             seg = segments.segment(self.schedule_time, self.schedule_time + 1)

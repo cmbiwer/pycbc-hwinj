@@ -2,6 +2,7 @@
 
 import argparse
 import os
+import numpy
 import shutil
 from pycbc_hwinj import results
 from glue import segments
@@ -13,17 +14,21 @@ from pycbc_hwinj.types import HardwareInjection
 PROTRACT_SEC = 300
 
 def split_str(s, n):
+    """ Splits str into n pieces.
+    """
     return [ s[i:i+n] for i in xrange(0, len(s), n) ]
 
 # command line usage
 parser = argparse.ArgumentParser(usage="pycbc_make_cal_workflow [--options]",
-                                 description="Workflow generator for adjusting calibration model.")
+             description="Workflow generator for adjusting calibration model.")
 
-# command line options
-parser.add_argument("--start-time", type=int, required=True,
-                    help="")
-parser.add_argument("--end-time", type=int, required=True,
-                    help="")
+# analysis time options
+parser.add_argument("--start-time", type=int, default=-numpy.inf,
+             help="")
+parser.add_argument("--end-time", type=int, default=numpy.inf,
+             help="")
+
+# output options
 parser.add_argument("--csv-template", type=str, default="templates/hwinj_csv.html",
                     help="")
 parser.add_argument("--html-template", type=str, default="templates/hwinj_table.html",
@@ -34,6 +39,8 @@ parser.add_argument("--output-html-file", type=str, required=True,
                     help="")
 parser.add_argument("--output-static-dir", type=str, required=True,
                     help="")
+
+# input options
 parser.add_argument("--segment-file", type=str, required=True,
                     help="")
 parser.add_argument("--excitation-file", type=str, required=True,
@@ -46,6 +53,8 @@ parser.add_argument("--schedule-file", type=str, required=True,
                     help="")
 parser.add_argument("--config-file", type=str, required=True,
                     help="")
+
+# coincidence options
 parser.add_argument("--exclude-coinc-flags", nargs="+", type=str, default=["DMT-ANALYSIS_READY:1"],
                     help="")
 
@@ -68,19 +77,17 @@ if opts.csv_template[0] != '/':
 else:
     csv_template_path = opts.csv_template
 
-##### setup
-
-# create a list to hold all the hardware injections
+# create a list to hold all the HardwareInjection instances
 hwinj_list = []
 
-# create lists to hold all segment, bitmask, and channel names
-exc_names = []
-seg_names = []
-bitmask_names = []
+# create lists to hold all segment, bitmask, and channel tags
+exc_tags = []
+seg_tags = []
+bitmask_tags = []
 
 # create list to hold all checks
-check_names = HardwareInjection.check_dict.keys()
-check_names.sort()
+check_tags = HardwareInjection.check_dict.keys()
+check_tags.sort()
 
 # time of analysis
 analysis_time = segments.segment(opts.start_time, opts.end_time)
@@ -89,124 +96,114 @@ analysis_time = segments.segment(opts.start_time, opts.end_time)
 
 # read excitation channel segments
 fp = open(opts.excitation_file, "r")
-lines = fp.readlines()
+lines = [line.rstrip("\n") for line in fp.readlines()]
 fp.close()
 
 # loop over excitations found
 for line in lines:
-
-    # get segment from line
-    line = line.rstrip("\n")
     entry = DataEntry.read_entry(line)
-    channel_name = entry.channel_name
-    ifo = channel_name.split(":")[0]
-    seg = entry.segmentlist[0]
-    channel_flag = channel_name[3:]
 
-    # create a HardwareInjection and append to the list
-    if seg in analysis_time:
-        hwinj = HardwareInjection(ifo)
-        hwinj.exc_dict[channel_flag] = segments.segmentlist([seg])
-        hwinj_list.append(hwinj)
+    # check that injection overlaps within this analysis time
+    if not entry.segmentlist.intersects_segment(analysis_time):
+        continue
 
-        # add to list of names if not already there
-        if channel_flag not in exc_names:
-            exc_names.append(channel_flag)
+    # create a HardwareInjection and append the dict of excitation channels
+    hwinj = HardwareInjection(entry.ifo)
+    hwinj.exc_dict[entry.channel_name] = entry.segmentlist
+    hwinj_list.append(hwinj)
+
+    # add tag to list of names if not already there
+    if entry.tag not in exc_tags:
+        exc_tags.append(entry.tag)
 
 ##### check_segdb
 
 # read segdb segments
 fp = open(opts.segment_file, "r")
-lines = fp.readlines()
+lines = [line.rstrip("\n") for line in fp.readlines()]
 fp.close()
 
 # loop over lines in segments file
-tmp_list = []
 for line in lines:
-
-    # get segment from line
-    line = line.rstrip("\n")
     entry = DataEntry.read_entry(line)
-    segment_name = entry.channel_name
-    ifo = segment_name.split(":")[0]
-    seg = entry.segmentlist[0]
-    segment_flag = segment_name[3:]
 
+    # loop over HardwareInjection list to
     # check if corresponding HardwareInjection exists
     match_found = False
     for hwinj in hwinj_list:
-        if hwinj.ifo == ifo and hwinj.inj_seg(opts.exclude_coinc_flags).intersects_segment(seg):
 
-            if segment_flag not in hwinj.seg_dict.keys():
-                hwinj.seg_dict[segment_flag] = segments.segmentlist([seg])
+        # check IFO and time intersection
+        if hwinj.ifo != entry.ifo \
+          or not hwinj.inj_seg(opts.exclude_coinc_flags).intersects(entry.segmentlist):
+            continue
 
-                # add to list of names if not already there
-                if segment_flag not in seg_names:
-                    seg_names.append(segment_flag)
+        # append the dict of segments
+        if entry.ifo+":"+entry.tag not in hwinj.seg_dict.keys():
+            hwinj.seg_dict[entry.ifo+":"+entry.tag] = entry.segmentlist
+        else:
+            hwinj.seg_dict[entry.ifo+":"+entry.tag] += entry.segmentlist
+        match_found = True
 
-            else:
-                hwinj.seg_dict[segment_flag].append(seg)
-            match_found = True
+        # add to list of tags if not already there
+        if entry.tag not in seg_tags:
+            seg_tags.append(entry.tag)
 
     # if there was no corresponding HardwareInjection then make one 
-    if not match_found and seg in analysis_time and segment_flag not in opts.exclude_coinc_flags:
-        tmp_hwinj = HardwareInjection(ifo)
-        tmp_hwinj.seg_dict[segment_flag] = segments.segmentlist([seg])
-        tmp_list.append(tmp_hwinj)
+    if not match_found \
+      and entry.segmentlist.intersects_segment(analysis_time) \
+      and entry.tag not in opts.exclude_coinc_flags:
+        tmp_hwinj = HardwareInjection(entry.ifo)
+        tmp_hwinj.seg_dict[entry.ifo+":"+entry.tag] = entry.segmentlist
+        hwinj_list.append(tmp_hwinj)
 
-        # add to list of names if not already there
-        if segment_flag not in seg_names:
-            seg_names.append(segment_flag)
-
-# add new HardwareInjection to list
-hwinj_list = hwinj_list + tmp_list
+        # add to list of tags if not already there
+        if entry.tag not in seg_tags:
+            seg_tags.append(entry.tag)
 
 ##### check_bitmask
 
 # read bitmask segments
 fp = open(opts.bitmask_file, "r")
-lines = fp.readlines()
+lines = [line.rstrip("\n") for line in fp.readlines()]
 fp.close()
 
 # loop over lines in bitmask segments files
 tmp_list = []
 for line in lines:
-
-    # get segment from line
-    line = line.rstrip("\n")
     entry = DataEntry.read_entry(line)
-    channel_name = entry.channel_name
-    ifo = channel_name.split(":")[0]
-    seg = entry.segmentlist[0]
-    bitmask_name = entry.description
 
-    # check if injection exists
+    # loop over HardwareInjection list to
+    # check if corresponding HardwareInjection exists
     match_found = False
     for hwinj in hwinj_list:
-        if hwinj.ifo == ifo and hwinj.inj_seg(opts.exclude_coinc_flags).intersects_segment(seg):
-            if bitmask_name not in hwinj.seg_dict.keys():
-                hwinj.bitmask_dict[bitmask_name] = segments.segmentlist([seg])
 
-                # add to list of names if not already there
-                if bitmask_name not in bitmask_names:
-                    bitmask_names.append(bitmask_name)
+        # check IFO and time intersection
+        if hwinj.ifo != entry.ifo \
+          or not hwinj.inj_seg(opts.exclude_coinc_flags).intersects(entry.segmentlist):
+            continue
 
-            else:
-                hwinj.bitmask_dict[bitmask_name].append(seg)
-            match_found = True
+        # append the dict of segments
+        if entry.ifo+":"+entry.tag not in hwinj.bitmask_dict.keys():
+            hwinj.bitmask_dict[entry.ifo+":"+entry.tag] = entry.segmentlist
+        else:
+            hwinj.bitmask_dict[entry.ifo+":"+entry.tag] += entry.segmentlist
+        match_found = True
+
+        # add to list of tags if not already there
+        if entry.tag not in bitmask_tags:
+            bitmask_tags.append(entry.tag)
 
     # if there was no corresponding HardwareInjection then make one 
-    if not match_found and seg in analysis_time and bitmask_name not in opts.exclude_coinc_flags:
-        hwinj = HardwareInjection(ifo)
-        hwinj.bitmask_dict[bitmask_name] = segments.segmentlist([seg])
-        tmp_list.append(hwinj)
+    if not match_found \
+      and entry.segmentlist.intersects_segment(analysis_time) \
+      and entry.tag not in opts.exclude_coinc_flags:
+        tmp_hwinj = HardwareInjection(entry.ifo)
+        tmp_hwinj.bitmask_dict[entry.ifo+":"+entry.tag] = entry.segmentlist
+        hwinj_list.append(tmp_hwinj)
 
-        # add to list of names if not already there
-        if bitmask_name not in bitmask_names:
-            bitmask_names.append(bitmask_name)
-
-# add new HardwareInjection to list
-hwinj_list = hwinj_list + tmp_list
+        # add to list of tags if not already there
+        if entry.tag not in bitmask_tags:
+            bitmask_tags.append(entry.tag)
 
 ##### check_schedule
 
@@ -277,6 +274,11 @@ hwinj_list = hwinj_list + tmp_list
 
 ##### output
 
+# sort tags
+exc_tags.sort()
+seg_tags.sort()
+bitmask_tags.sort()
+
 # render template
 template_dir = os.path.dirname(html_template_path)
 template_filename = os.path.basename(html_template_path)
@@ -292,10 +294,10 @@ context = {
     "csv_filename" : os.path.basename(opts.output_csv_file),
     "config_filename" : os.path.basename(opts.config_file),
     "hwinj_list" : hwinj_list,
-    "exc_names" : exc_names,
-    "seg_names" : seg_names,
-    "bitmask_names" : bitmask_names,
-    "check_names" : check_names,
+    "exc_names" : exc_tags,
+    "seg_names" : seg_tags,
+    "bitmask_names" : bitmask_tags,
+    "check_names" : check_tags,
 }
 html_output = template.render(context)
 
@@ -315,10 +317,10 @@ env.globals.update(HardwareInjection=HardwareInjection)
 template = env.get_template(template_filename)
 context = {
     "hwinj_list" : hwinj_list,
-    "exc_names" : exc_names,
-    "seg_names" : seg_names,
-    "bitmask_names" : bitmask_names,
-    "check_names" : check_names,
+    "exc_names" : exc_tags,
+    "seg_names" : seg_tags,
+    "bitmask_names" : bitmask_tags,
+    "check_names" : check_tags,
 }
 csv_output = template.render(context)
 

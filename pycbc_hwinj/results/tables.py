@@ -58,6 +58,7 @@ def table_row_values(hwinj, exc_keys, seg_keys, bitmask_keys, check_keys):
 
     # add check_exc values
     for key in exc_keys:
+        key = hwinj.ifo + ":" + key
         if key in hwinj.exc_dict.keys():
             seg_list = hwinj.exc_dict[key]
             seg_str = ""
@@ -71,6 +72,7 @@ def table_row_values(hwinj, exc_keys, seg_keys, bitmask_keys, check_keys):
 
     # add check_segdb values
     for key in seg_keys:
+        key = hwinj.ifo + ":" + key
         if key in hwinj.seg_dict.keys():
             seg_list = hwinj.seg_dict[key]
             seg_str = ""
@@ -84,6 +86,7 @@ def table_row_values(hwinj, exc_keys, seg_keys, bitmask_keys, check_keys):
 
     # add check_bitmask values
     for key in bitmask_keys:
+        key = hwinj.ifo + ":" + key
         if key in hwinj.bitmask_dict.keys():
             seg_list = hwinj.bitmask_dict[key]
             seg_str = ""

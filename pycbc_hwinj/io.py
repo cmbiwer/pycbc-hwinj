@@ -13,6 +13,16 @@ class DataEntry(object):
         self.description = description
         self.bitmask = bitmask
 
+    @property
+    def ifo(self):
+        return self.channel_name[:2]
+
+    @property
+    def tag(self):
+        if len(self.description):
+            return self.description
+        return self.channel_name[3:]
+
     def write(self, delimiter=","):
 
         # find all point excitations since segments module cannot handle
