@@ -6,8 +6,17 @@ NUM=${1}
 # name of workflow
 # use naming convention to find workflow name from only week number
 WORKFLOW_NAME=`ls -d hwinj_${NUM}_*`
+
+# get GPS time
+if [ ${1} -lt 10 ]; then
 GPS_START_TIME=${WORKFLOW_NAME:8:10}
 GPS_END_TIME=${WORKFLOW_NAME:19:10}
+else
+GPS_START_TIME=${WORKFLOW_NAME:9:10}
+GPS_END_TIME=${WORKFLOW_NAME:20:10}
+fi
+
+echo $GPS_START_TIME
 
 # directories
 RUN_DIR=${WORKFLOW_NAME}/${WORKFLOW_NAME}
