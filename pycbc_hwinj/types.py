@@ -61,7 +61,6 @@ class HardwareInjection(object):
                 tmp_list.extend(self.seg_dict[key])
         for key in self.bitmask_dict.keys():
             if key[3:] not in exclude_coinc_flags:
-                print key
                 tmp_list.extend(self.bitmask_dict[key])
         if self.schedule_time:
             seg = segments.segment(self.schedule_time, self.schedule_time + 1)
