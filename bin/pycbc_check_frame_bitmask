@@ -63,7 +63,6 @@ if opts.flip_bits:
 # get segments where bit is active
 segs = from_bitstream(bits, data.start_time, data.delta_t)
 segs = segments.segmentlist([segments.segment(seg[0], seg[1]) for seg in segs])
-segs.coalesce()
 
 # pad segments by a fraction of a second
 segs = segments.segmentlist([seg.protract(opts.pad_seconds) for seg in segs])
