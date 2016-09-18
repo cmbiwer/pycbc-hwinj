@@ -43,10 +43,10 @@ for path in opts.input_files:
            entry = DataEntry.read_entry(line)
 
            # add entry to dict
-           if entry.description not in entries_dict.keys():
-               entries_dict[entry.description] = entry
+           if entry.ifo+":"+entry.tag not in entries_dict.keys():
+               entries_dict[entry.ifo+":"+entry.tag] = entry
            else:
-               entries_dict[entry.description].segmentlist += entry.segmentlist
+               entries_dict[entry.ifo+":"+entry.tag].segmentlist += entry.segmentlist
 
 # set couple sample points protacting than contracting in seconds
 # while the segmentlist is coalesce
