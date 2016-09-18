@@ -24,7 +24,7 @@ HTML_DIR=${HOME}/public_html/hwinj_log/o1/${WORKFLOW_NAME}
 
 # make HTML table
 mkdir -p ${HTML_DIR}
-python ../../bin/pycbc_make_hwinj_table --start-time ${GPS_START_TIME} --end-time ${GPS_END_TIME} \
+pycbc_make_hwinj_table --start-time ${GPS_START_TIME} --end-time ${GPS_END_TIME} \
     --excitation-file  ${RUN_DIR}/check_exc/H1L1-CAT_FRAME_DATA_EXC-${GPS_START_TIME}-604800.txt \
     --bitmask-file  ${RUN_DIR}/check_bitmask/H1L1-CAT_FRAME_DATA_BITMASK-${GPS_START_TIME}-604800.txt \
     --gracedb-file  ${RUN_DIR}/check_gracedb/H1L1-GRACEDB-${GPS_START_TIME}-604800.txt \
