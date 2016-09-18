@@ -35,7 +35,7 @@ pycbc_make_hwinj_workflow --name ${WORKFLOW_NAME} \
         workflow-results:results-dir:${RESULTS_DIR} &> ${WORKFLOW_NAME}.txt
 
 # limit workflow to only 16 jobs
-export _CONDOR_DAGMAN_MAX_JOBS_SUBMITTED=16
+export _CONDOR_DAGMAN_MAX_JOBS_SUBMITTED=100
 
 # get rid of grid proxy because it lives in /tmp/ and nodes cannot see that
 unset X509_USER_PROXY
