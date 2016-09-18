@@ -54,3 +54,5 @@ sh run_pycbc_make_hwinj_workflow.sh 3
 This will plan and submit the workflow.
 
 Note that if you are doing many I/O operations on raw frame files there will be a significant speed up if you do not checksum all the files each time it is opened.
+
+If you need to rerun a workflow but do not want to rerun all the jobs in the workflow you can give ``pycbc_submit_dax`` the ``--cache-file`` option to use exisiting data.
